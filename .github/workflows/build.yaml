@@ -1,9 +1,8 @@
 name: Build and Lint
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
+
 jobs:
   swagger:
     runs-on: ubuntu-latest
