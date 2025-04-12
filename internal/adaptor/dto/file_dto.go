@@ -31,6 +31,7 @@ func (f *fileDto) ToResponse(file domain.File) (*FileResponse, error) {
 		url, err := f.private.GetSignedUrl(context.TODO(), file.Key, time.Hour*1)
 		if err != nil {
 			return &FileResponse{
+				ID:        int(file.ID),
 				Name:      file.Name,
 				Url:       "error",
 				CreatedAt: &file.CreatedAt,
@@ -38,6 +39,7 @@ func (f *fileDto) ToResponse(file domain.File) (*FileResponse, error) {
 		}
 
 		return &FileResponse{
+			ID:        int(file.ID),
 			Name:      file.Name,
 			Url:       url,
 			CreatedAt: &file.CreatedAt,
@@ -49,6 +51,7 @@ func (f *fileDto) ToResponse(file domain.File) (*FileResponse, error) {
 			return nil, apperror.InternalServerError(err, "generate url error")
 		}
 		return &FileResponse{
+			ID:        int(file.ID),
 			Name:      file.Name,
 			Url:       url,
 			CreatedAt: &file.CreatedAt,
