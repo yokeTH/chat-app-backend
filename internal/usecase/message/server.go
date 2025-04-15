@@ -58,6 +58,10 @@ func (s *messageServer) receiveMessageProcess(client *client) {
 		case websocket.TextMessage:
 			msg := string(message)
 			msgs := strings.Split(msg, ":")
+			if len(msgs) < 2 {
+				log.Printf("malformed message received: %s\n", msg)
+				continue
+			}
 			id := msgs[0]
 			text := strings.Join(msgs[1:], ":")
 			fmt.Println(id, text)
