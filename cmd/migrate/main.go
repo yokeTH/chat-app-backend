@@ -3,16 +3,35 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
-	"github.com/yokeTH/gofiber-template/internal/config"
+	"github.com/joho/godotenv"
 	"github.com/yokeTH/gofiber-template/internal/domain"
 	"github.com/yokeTH/gofiber-template/pkg/db"
 )
 
 func main() {
-	config := config.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Unable to load .env file: %s", err)
+	}
 
-	db, err := db.New(config.PSQL)
+	portStr := os.Getenv("POSTGRES_PORT")
+	port, err := strconv.ParseInt(portStr, 10, 64)
+	if err != nil {
+		log.Fatalf("Failed to parse port number: %v", err)
+	}
+
+	config := db.DBConfig{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     int(port),
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		DBName:   os.Getenv("POSTGRES_NAME"),
+		SSLMode:  os.Getenv("POSTGRES_SSL_MODE"),
+	}
+
+	db, err := db.New(config)
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
