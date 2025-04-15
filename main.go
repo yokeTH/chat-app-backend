@@ -7,7 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/handler"
+	"github.com/yokeTH/gofiber-template/internal/adaptor/middleware"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/repository"
 	"github.com/yokeTH/gofiber-template/internal/config"
 	"github.com/yokeTH/gofiber-template/internal/server"
@@ -46,6 +48,9 @@ func main() {
 		log.Fatalf("failed to create private bucket instance: %v", err)
 	}
 
+	// Setup middleware
+	wsMiddleware := middleware.NewWebsocketMiddleware()
+
 	// Setup repository
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
@@ -57,6 +62,7 @@ func main() {
 	// Setup handlers
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
+	msgHandler := handler.NewMessageHandler()
 
 	// Setup server
 	s := server.New(
@@ -85,6 +91,13 @@ func main() {
 			file.Get("/:id", fileHandler.GetInfo)
 			file.Post("/private", fileHandler.CreatePrivateFile)
 			file.Post("/public", fileHandler.CreatePublicFile)
+		}
+	}
+	{
+		message := s.Group("/message")
+		{
+			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocal)
+			message.Get("/ws", websocket.New(msgHandler.HandleMessage))
 		}
 	}
 
