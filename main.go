@@ -7,12 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/handler"
+	"github.com/yokeTH/gofiber-template/internal/adaptor/middleware"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/repository"
 	"github.com/yokeTH/gofiber-template/internal/config"
 	"github.com/yokeTH/gofiber-template/internal/server"
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
+	"github.com/yokeTH/gofiber-template/internal/usecase/message"
 	"github.com/yokeTH/gofiber-template/pkg/db"
 	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
@@ -46,6 +49,12 @@ func main() {
 		log.Fatalf("failed to create private bucket instance: %v", err)
 	}
 
+	msgServer := message.NewMessageServer()
+	go msgServer.Start(ctx, stop)
+
+	// Setup middleware
+	wsMiddleware := middleware.NewWebsocketMiddleware()
+
 	// Setup repository
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
@@ -53,10 +62,12 @@ func main() {
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket, privateBucket)
+	msgUC := message.NewMessageUseCase(msgServer)
 
 	// Setup handlers
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
+	msgHandler := handler.NewMessageHandler(msgUC)
 
 	// Setup server
 	s := server.New(
@@ -85,6 +96,13 @@ func main() {
 			file.Get("/:id", fileHandler.GetInfo)
 			file.Post("/private", fileHandler.CreatePrivateFile)
 			file.Post("/public", fileHandler.CreatePublicFile)
+		}
+	}
+	{
+		message := s.Group("/message")
+		{
+			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
+			message.Get("/ws/:id", websocket.New(msgHandler.HandleMessage))
 		}
 	}
 
