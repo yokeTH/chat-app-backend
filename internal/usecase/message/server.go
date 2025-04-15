@@ -63,7 +63,11 @@ func (s *messageServer) receiveMessageProcess(client *client) {
 	}()
 
 	// first message is auth
-	s.auth(client)
+	if err := s.auth(client); err != nil {
+		log.Printf("Authentication failed: %v", err)
+		client.sendError("Authentication failed")
+		return
+	}
 
 	for {
 		messageType, message, err := client.connection.ReadMessage()
@@ -166,38 +170,32 @@ func (s *messageServer) validateGoogleToken(token string) (domain.Profile, error
 	return profile, nil
 }
 
-func (s *messageServer) auth(client *client) {
-	fmt.Println("MSG SERVER WAITING FOR AUTH")
+func (s *messageServer) auth(client *client) error {
 	messageType, message, err := client.connection.ReadMessage()
 	if err != nil {
 		log.Printf("authentication error: %v\n", err)
-		client.sendError("authentication error")
-		return
+		return err
 	}
 
 	if messageType != websocket.TextMessage {
 		log.Printf("expected text message for authentication, got type %d\n", messageType)
-		client.sendError("Invalid authentication format")
-		return
+		return err
 	}
 
 	var authRequest dto.AuthRequest
 	if err := json.Unmarshal(message, &authRequest); err != nil {
 		log.Printf("invalid JSON auth format: %v\n", err)
-		client.sendError("Invalid JSON format")
-		return
+		return err
 	}
 
 	profile, err := s.validateGoogleToken(authRequest.Token)
 	if err != nil {
-		client.sendError(err.Error())
-		return
+		return err
 	}
 
 	user, err := s.userRepo.GetUserByProvider("GOOGLE", profile.Sub)
 	if err != nil {
-		client.sendError(err.Error())
-		return
+		return err
 	}
 
 	// Set client information
@@ -212,8 +210,7 @@ func (s *messageServer) auth(client *client) {
 	// Send authentication success response
 	err = client.connection.WriteMessage(websocket.TextMessage, []byte(profile.Sub))
 	if err != nil {
-		return
+		return err
 	}
-
-	fmt.Println("FINISHED AUTH", user.ID)
+	return nil
 }
