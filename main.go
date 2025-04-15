@@ -101,7 +101,7 @@ func main() {
 	{
 		message := s.Group("/message")
 		{
-			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocal)
+			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
 			message.Get("/ws/:id", websocket.New(msgHandler.HandleMessage))
 		}
 	}
