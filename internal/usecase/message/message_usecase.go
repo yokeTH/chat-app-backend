@@ -17,7 +17,7 @@ func NewMessageUseCase(server *messageServer) *messageUseCase {
 	}
 }
 
-func (m *messageUseCase) RegisterClient(id string, c *websocket.Conn) *sync.WaitGroup {
+func (m *messageUseCase) RegisterClient(c *websocket.Conn) *sync.WaitGroup {
 	m.server.wrmu.Lock()
 	defer m.server.wrmu.Unlock()
 	var wg sync.WaitGroup
@@ -27,9 +27,7 @@ func (m *messageUseCase) RegisterClient(id string, c *websocket.Conn) *sync.Wait
 		connection: c,
 		wg:         &wg,
 	}
-	m.server.clients[id] = &client
 	go m.server.receiveMessageProcess(&client)
-	m.SendMessage(id, "connection established")
 	return &wg
 }
 

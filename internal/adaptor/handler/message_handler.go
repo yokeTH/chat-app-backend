@@ -16,6 +16,5 @@ func NewMessageHandler(msgUseCase message.MessageUseCase) *messageHandler {
 }
 
 func (h *messageHandler) HandleMessage(c *websocket.Conn) {
-	id := c.Params("id")
-	h.msgUseCase.RegisterClient(id, c).Wait()
+	h.msgUseCase.RegisterClient(c).Wait()
 }
