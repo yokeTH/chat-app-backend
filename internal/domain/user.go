@@ -17,6 +17,9 @@ type User struct {
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 
+	Provider   string `gorm:"size:50;uniqueIndex:composite_provider"`
+	ProviderID string `gorm:"size:100;uniqueIndex:composite_provider"`
+
 	// Relationships
 	Conversations []Conversation `gorm:"many2many:conversation_members;"`
 	Messages      []Message      `gorm:"foreignKey:SenderID"`

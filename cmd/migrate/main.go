@@ -20,6 +20,7 @@ func main() {
 	if err := db.AutoMigrate(
 		&domain.Book{},
 		&domain.File{},
+		&domain.User{},
 	); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
