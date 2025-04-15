@@ -16,6 +16,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
 	"github.com/yokeTH/gofiber-template/internal/usecase/message"
+	"github.com/yokeTH/gofiber-template/internal/usecase/user"
 	"github.com/yokeTH/gofiber-template/pkg/db"
 	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
@@ -53,18 +54,22 @@ func main() {
 	go msgServer.Start(ctx, stop)
 
 	// Setup middleware
+	authMiddleware := middleware.NewAuthMiddleware()
 	wsMiddleware := middleware.NewWebsocketMiddleware()
 
 	// Setup repository
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket, privateBucket)
 	msgUC := message.NewMessageUseCase(msgServer)
+	userUC := user.NewUserUseCase(userRepo)
 
 	// Setup handlers
+	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
 	msgHandler := handler.NewMessageHandler(msgUC)
@@ -79,6 +84,12 @@ func main() {
 	)
 
 	// Setup routes
+	{
+		auth := s.Group("/auth")
+		{
+			auth.Post("/google", authMiddleware.Auth, authHandler.HandleGoogleLogin)
+		}
+	}
 	{
 		book := s.Group("/books")
 		{
