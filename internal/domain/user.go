@@ -13,7 +13,7 @@ type User struct {
 	Email        string    `gorm:"size:255;not null;uniqueIndex"`
 	PasswordHash string    `gorm:"size:255;not null"`
 	AvatarURL    string    `gorm:"size:255"`
-	IsOnline     bool      `gorm:"default:false;index"`
+	IsOnline     bool      `gorm:"default:false;index"` // to be use redis
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 
@@ -24,6 +24,16 @@ type User struct {
 	Conversations []Conversation `gorm:"many2many:conversation_members;"`
 	Messages      []Message      `gorm:"foreignKey:SenderID"`
 	Reactions     []Reaction     `gorm:"foreignKey:UserID"`
+}
+
+type Profile struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	FamilyName    string `json:"family_name"`
+	GivenName     string `json:"given_name"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
+	Sub           string `json:"sub"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
