@@ -14,7 +14,7 @@ func NewWebsocketMiddleware() *websocketMiddleware {
 	return &websocketMiddleware{}
 }
 
-func (m *websocketMiddleware) RequiredUpgradeProtocal(c *fiber.Ctx) error {
+func (m *websocketMiddleware) RequiredUpgradeProtocol(c *fiber.Ctx) error {
 	if websocket.IsWebSocketUpgrade(c) {
 		return c.Next()
 	}
