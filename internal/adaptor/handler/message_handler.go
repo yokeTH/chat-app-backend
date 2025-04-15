@@ -1,34 +1,20 @@
 package handler
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/gofiber/contrib/websocket"
+	"github.com/yokeTH/gofiber-template/internal/usecase/message"
 )
 
 type messageHandler struct {
+	msgUseCase message.MessageUseCase
 }
 
-func NewMessageHandler() *messageHandler {
-	return &messageHandler{}
+func NewMessageHandler(msgUseCase message.MessageUseCase) *messageHandler {
+	return &messageHandler{
+		msgUseCase: msgUseCase,
+	}
 }
 
 func (h *messageHandler) HandleMessage(c *websocket.Conn) {
-	for {
-		messageType, message, err := c.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("read message error: %v\n", err)
-			}
-			return
-		}
-		if messageType == websocket.TextMessage {
-			// Broadcast the received message
-			// broadcast <- string(message)
-			fmt.Println(string(message))
-		} else {
-			log.Println("websocket message received of type", messageType)
-		}
-	}
+	h.msgUseCase.RegisterClient("TEST", c).Wait()
 }

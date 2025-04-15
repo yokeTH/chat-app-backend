@@ -15,6 +15,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/server"
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
+	"github.com/yokeTH/gofiber-template/internal/usecase/message"
 	"github.com/yokeTH/gofiber-template/pkg/db"
 	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
@@ -48,6 +49,9 @@ func main() {
 		log.Fatalf("failed to create private bucket instance: %v", err)
 	}
 
+	msgServer := message.NewMessageServer()
+	go msgServer.Start(ctx, stop)
+
 	// Setup middleware
 	wsMiddleware := middleware.NewWebsocketMiddleware()
 
@@ -58,11 +62,12 @@ func main() {
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket, privateBucket)
+	msgUC := message.NewMessageUseCase(msgServer)
 
 	// Setup handlers
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
-	msgHandler := handler.NewMessageHandler()
+	msgHandler := handler.NewMessageHandler(msgUC)
 
 	// Setup server
 	s := server.New(
