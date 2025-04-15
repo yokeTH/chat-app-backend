@@ -40,7 +40,7 @@ func (s *messageServer) Start(ctx context.Context, stop context.CancelFunc) {
 	log.Println("shutting down message server...")
 }
 
-func (s *messageServer) ReceiveMessageProcess(client *client) {
+func (s *messageServer) receiveMessageProcess(client *client) {
 	defer func() {
 		client.wg.Done()
 		client.isClosed = true
