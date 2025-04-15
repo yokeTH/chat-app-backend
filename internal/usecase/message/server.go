@@ -178,8 +178,7 @@ func (s *messageServer) auth(client *client) error {
 	}
 
 	if messageType != websocket.TextMessage {
-		log.Printf("expected text message for authentication, got type %d\n", messageType)
-		return err
+		return fmt.Errorf("expected text message, got type %d", messageType)
 	}
 
 	var authRequest dto.AuthRequest
