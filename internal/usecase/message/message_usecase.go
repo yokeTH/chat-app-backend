@@ -29,7 +29,7 @@ func (m *messageUseCase) RegisterClient(id string, c *websocket.Conn) *sync.Wait
 	}
 	m.server.clients[id] = &client
 	go m.server.ReceiveMessageProcess(&client)
-	m.SendMessage("TEST", "connection established")
+	m.SendMessage(id, "connection established")
 	return &wg
 }
 

@@ -2,7 +2,9 @@ package message
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -54,7 +56,13 @@ func (s *messageServer) ReceiveMessageProcess(client *client) {
 		}
 		switch messageType {
 		case websocket.TextMessage:
-			client.message <- message
+			msg := string(message)
+			msgs := strings.Split(msg, ":")
+			id := msgs[0]
+			text := strings.Join(msgs[1:], ":")
+			fmt.Println(id, text)
+			s.clients[id].message <- []byte(text)
+			// client.message <- message
 		// comment for lazy fix lint
 		// case websocket.PingMessage:
 		// 	client.connection.WriteMessage(websocket.PongMessage, []byte{})
@@ -67,28 +75,31 @@ func (s *messageServer) ReceiveMessageProcess(client *client) {
 func (s *messageServer) sendMessageProcess() {
 	for {
 		for id, client := range s.clients {
-			msg, ok := <-client.message
-			if !ok {
-				s.removeClient(id)
-				continue
-			}
-
-			client.mu.Lock()
-			if client.isClosed {
-				client.mu.Unlock()
-				s.removeClient(id)
-				continue
-			}
-
-			if err := client.connection.WriteMessage(websocket.TextMessage, msg); err != nil {
-				client.isClosed = true
-				log.Println("write error:", err)
-				if err := client.connection.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
-					log.Print("write close err:", err)
+			select {
+			case msg, ok := <-client.message:
+				if !ok {
+					s.removeClient(id)
+					continue
 				}
-				client.connection.Close()
+
+				client.mu.Lock()
+				if client.isClosed {
+					client.mu.Unlock()
+					s.removeClient(id)
+					continue
+				}
+
+				if err := client.connection.WriteMessage(websocket.TextMessage, msg); err != nil {
+					client.isClosed = true
+					log.Println("write error:", err)
+					if err := client.connection.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+						log.Print("write close err:", err)
+					}
+					client.connection.Close()
+				}
+				client.mu.Unlock()
+			default:
 			}
-			client.mu.Unlock()
 
 		}
 		time.Sleep(10 * time.Millisecond)
