@@ -14,6 +14,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/config"
 	"github.com/yokeTH/gofiber-template/internal/server"
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
+	"github.com/yokeTH/gofiber-template/internal/usecase/conversation"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
 	"github.com/yokeTH/gofiber-template/internal/usecase/message"
 	"github.com/yokeTH/gofiber-template/internal/usecase/user"
@@ -50,14 +51,11 @@ func main() {
 		log.Fatalf("failed to create private bucket instance: %v", err)
 	}
 
-	// Setup middleware
-	authMiddleware := middleware.NewAuthMiddleware()
-	wsMiddleware := middleware.NewWebsocketMiddleware()
-
 	// Setup repository
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	conversationRepo := repository.NewConversationRepository(db)
 
 	msgServer := message.NewMessageServer(userRepo)
 	go msgServer.Start(ctx, stop)
@@ -67,12 +65,18 @@ func main() {
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket, privateBucket)
 	msgUC := message.NewMessageUseCase(msgServer)
 	userUC := user.NewUserUseCase(userRepo)
+	conversationUC := conversation.NewConversationUseCase(conversationRepo)
 
 	// Setup handlers
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
 	msgHandler := handler.NewMessageHandler(msgUC)
+	conversationHandler := handler.NewConversationHandler(conversationUC)
+
+	// Setup middleware
+	authMiddleware := middleware.NewAuthMiddleware(userUC)
+	wsMiddleware := middleware.NewWebsocketMiddleware()
 
 	// Setup server
 	s := server.New(
@@ -114,6 +118,12 @@ func main() {
 		{
 			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
 			message.Get("/ws", websocket.New(msgHandler.HandleMessage))
+		}
+	}
+	{
+		conversation := s.Group("/conversation", authMiddleware.Auth)
+		{
+			conversation.Get("/", conversationHandler.HandleListConversation)
 		}
 	}
 

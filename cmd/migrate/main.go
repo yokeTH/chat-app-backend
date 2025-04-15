@@ -40,6 +40,7 @@ func main() {
 		&domain.Book{},
 		&domain.File{},
 		&domain.User{},
+		&domain.Conversation{},
 	); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
