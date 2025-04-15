@@ -39,5 +39,5 @@ func (m *messageUseCase) SendMessage(id string, message string) {
 		client.message <- []byte(message)
 		return
 	}
-	fmt.Printf("user %s not exits\n", id)
+	fmt.Printf("user %s does not exist\n", id)
 }
