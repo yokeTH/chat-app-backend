@@ -15,7 +15,7 @@ func NewUserUseCase(userRepo UserRepository) *userUseCase {
 	}
 }
 
-func (u *userUseCase) GoogleLogin(profile domain.Profile) (*domain.User, *apperror.AppError) {
+func (u *userUseCase) GoogleLogin(profile domain.Profile) (*domain.User, error) {
 
 	user := domain.User{
 		Name:       profile.Name,

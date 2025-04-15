@@ -17,7 +17,7 @@ func NewUserRepository(db *gorm.DB) *userRepository {
 	}
 }
 
-func (r *userRepository) GetUserByID(id string) (*domain.User, *apperror.AppError) {
+func (r *userRepository) GetUserByID(id string) (*domain.User, error) {
 	var user domain.User
 
 	if err := r.db.Where("id = ?", id).First(&user).Error; err != nil {
@@ -29,7 +29,7 @@ func (r *userRepository) GetUserByID(id string) (*domain.User, *apperror.AppErro
 	return &user, nil
 }
 
-func (r *userRepository) GetUserByProvider(provider, providerID string) (*domain.User, *apperror.AppError) {
+func (r *userRepository) GetUserByProvider(provider, providerID string) (*domain.User, error) {
 	var user domain.User
 
 	if err := r.db.Where("provider = ? AND provider_id = ?", provider, providerID).First(&user).Error; err != nil {
@@ -41,14 +41,14 @@ func (r *userRepository) GetUserByProvider(provider, providerID string) (*domain
 	return &user, nil
 }
 
-func (r *userRepository) CreateUser(user *domain.User) (*domain.User, *apperror.AppError) {
+func (r *userRepository) CreateUser(user *domain.User) (*domain.User, error) {
 	if err := r.db.Create(user).Error; err != nil {
 		return nil, apperror.InternalServerError(err, "failed to create user")
 	}
 	return user, nil
 }
 
-func (r *userRepository) UpdateUserInfo(userID string, updatedData dto.UpdateUserRequest) *apperror.AppError {
+func (r *userRepository) UpdateUserInfo(userID string, updatedData dto.UpdateUserRequest) error {
 	if err := r.db.
 		Model(&domain.User{}).
 		Where("id = ?", userID).
@@ -58,7 +58,7 @@ func (r *userRepository) UpdateUserInfo(userID string, updatedData dto.UpdateUse
 	return nil
 }
 
-func (r *userRepository) SetIsOnline(userID string, isOnline bool) *apperror.AppError {
+func (r *userRepository) SetIsOnline(userID string, isOnline bool) error {
 	if err := r.db.
 		Model(&domain.User{}).
 		Where("id = ?", userID).

@@ -50,9 +50,6 @@ func main() {
 		log.Fatalf("failed to create private bucket instance: %v", err)
 	}
 
-	msgServer := message.NewMessageServer()
-	go msgServer.Start(ctx, stop)
-
 	// Setup middleware
 	authMiddleware := middleware.NewAuthMiddleware()
 	wsMiddleware := middleware.NewWebsocketMiddleware()
@@ -61,6 +58,9 @@ func main() {
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
 	userRepo := repository.NewUserRepository(db)
+
+	msgServer := message.NewMessageServer(userRepo)
+	go msgServer.Start(ctx, stop)
 
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
@@ -113,7 +113,7 @@ func main() {
 		message := s.Group("/message")
 		{
 			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
-			message.Get("/ws/:id", websocket.New(msgHandler.HandleMessage))
+			message.Get("/ws", websocket.New(msgHandler.HandleMessage))
 		}
 	}
 
