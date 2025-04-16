@@ -59,11 +59,17 @@ func (r *userRepository) UpdateUserInfo(userID string, updatedData dto.UpdateUse
 }
 
 func (r *userRepository) SetIsOnline(userID string, isOnline bool) error {
+	user := domain.User{
+		IsOnline: isOnline,
+	}
+
 	if err := r.db.
 		Model(&domain.User{}).
 		Where("id = ?", userID).
-		Updates(domain.User{IsOnline: isOnline}).Error; err != nil {
+		Select("IsOnline").
+		Updates(&user).Error; err != nil {
 		return apperror.InternalServerError(err, "failed to update user info")
 	}
+
 	return nil
 }
