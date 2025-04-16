@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -51,8 +50,6 @@ func (a *authMiddleware) Auth(ctx *fiber.Ctx) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		fmt.Println(string(bodyBytes))
 		return apperror.UnauthorizedError(fmt.Errorf("non-200 response from Google OAuth: %s", resp.Status), "Failed to get profile from Google OAuth")
 	}
 
