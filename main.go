@@ -25,11 +25,11 @@ import (
 
 // @title GO-FIBER-TEMPLATE API
 // @version 1.0
-// @servers https http
+// @description Bearer token authentication
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
-// @description Bearer token authentication
+// @schemes http https
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
@@ -123,9 +123,10 @@ func main() {
 		}
 	}
 	{
-		conversation := s.Group("/conversation", authMiddleware.Auth)
+		conversation := s.Group("/conversations", authMiddleware.Auth)
 		{
 			conversation.Get("/", conversationHandler.HandleListConversation)
+			conversation.Post("/", conversationHandler.HandleCreateConversation)
 		}
 	}
 
