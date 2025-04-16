@@ -26,6 +26,7 @@ func (m *messageUseCase) RegisterClient(c *websocket.Conn) *sync.WaitGroup {
 		message:    make(chan []byte, 10),
 		connection: c,
 		wg:         &wg,
+		terminate:  make(chan bool, 1),
 	}
 	go m.server.receiveMessageProcess(&client)
 	return &wg

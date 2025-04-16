@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ func (a *authMiddleware) Auth(ctx *fiber.Ctx) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return apperror.UnauthorizedError(errors.New("non-200 response from Google OAuth"), "Failed to get profile from Google OAuth")
+		return apperror.UnauthorizedError(fmt.Errorf("non-200 response from Google OAuth: %s", resp.Status), "Failed to get profile from Google OAuth")
 	}
 
 	var profile domain.Profile

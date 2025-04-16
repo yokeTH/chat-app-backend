@@ -26,7 +26,8 @@ func NewConversationHandler(convUC conversation.ConversationUseCase, dto dto.Con
 //
 //	@summary		GetConversation
 //	@description	list conversations
-//	@tags			conversations
+//	@tags			conversation
+//	@Security		Bearer
 //	@produce		json
 //	@Param			limit	query	int	false	"Number of history to be retrieved"
 //	@Param			page	query	int	false	"Page to retrieved"
@@ -37,7 +38,7 @@ func NewConversationHandler(convUC conversation.ConversationUseCase, dto dto.Con
 //	@Router /conversations [get]
 func (c *conversationHandler) HandleListConversation(ctx *fiber.Ctx) error {
 	page, limit := extractPaginationControl(ctx)
-	user, ok := ctx.Locals("user").(domain.User)
+	user, ok := ctx.Locals("user").(*domain.User)
 	if !ok {
 		return apperror.InternalServerError(errors.New("failed to retrieve user from context"), "unable to retrieve user from context")
 	}
@@ -61,6 +62,7 @@ func (c *conversationHandler) HandleListConversation(ctx *fiber.Ctx) error {
 //	@summary		Create conversation
 //	@description	create new conversation
 //	@tags			conversation
+//	@Security		Bearer
 //	@accept			json
 //	@produce 		json
 //	@param			conversation	body 	dto.CreateConversationRequest	true	"conversation data"
@@ -74,7 +76,7 @@ func (c *conversationHandler) HandleCreateConversation(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(body); err != nil {
 		return apperror.BadRequestError(err, "invalid body")
 	}
-	user, ok := ctx.Locals("user").(domain.User)
+	user, ok := ctx.Locals("user").(*domain.User)
 	if !ok {
 		return apperror.InternalServerError(errors.New("get profile error"), "get profile error")
 	}

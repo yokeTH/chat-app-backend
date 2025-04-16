@@ -16,8 +16,12 @@ func NewUserUseCase(userRepo UserRepository) *userUseCase {
 }
 
 func (u *userUseCase) GoogleLogin(profile domain.Profile) (*domain.User, error) {
+	user, err := u.userRepo.GetUserByProvider("GOOGLE", profile.Sub)
+	if err == nil {
+		return user, nil
+	}
 
-	user := domain.User{
+	newUser := domain.User{
 		Name:       profile.Name,
 		Email:      profile.Email,
 		AvatarURL:  profile.Picture,
@@ -25,15 +29,10 @@ func (u *userUseCase) GoogleLogin(profile domain.Profile) (*domain.User, error) 
 		ProviderID: profile.Sub,
 	}
 
-	createdUser, createdErr := u.userRepo.CreateUser(&user)
-	foundUser, foundErr := u.userRepo.GetUserByProvider("GOOGLE", profile.Sub)
-
-	if foundErr != nil && createdErr != nil {
-		return nil, apperror.BadRequestError(foundErr, "login error")
-	} else if foundErr == nil {
-		return foundUser, nil
-	} else {
-		return createdUser, nil
+	createdUser, err := u.userRepo.CreateUser(&newUser)
+	if err != nil {
+		return nil, apperror.BadRequestError(err, "failed to create user")
 	}
 
+	return createdUser, nil
 }

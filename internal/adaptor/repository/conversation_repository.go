@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/yokeTH/gofiber-template/internal/domain"
@@ -38,7 +37,7 @@ func (r *conversationRepository) GetUserConversations(userID string, limit, page
 
 func (r *conversationRepository) CreateConversation(usersID []string, createdByID string, name string) (*domain.Conversation, error) {
 	if len(usersID) < 2 {
-		return nil, errors.New("invalid usersID cannot be empty")
+		return nil, apperror.BadRequestError(fmt.Errorf("validate create conversation failed"), "users id must be more than 1")
 	}
 
 	isGroup := len(usersID) > 2
@@ -54,8 +53,9 @@ func (r *conversationRepository) CreateConversation(usersID []string, createdByI
 	if err := r.db.Where("id IN ?", usersID).Find(&users).Error; err != nil {
 		return nil, err
 	}
+	fmt.Println("FIND ID IN:", users)
 	if len(users) != len(usersID) {
-		return nil, fmt.Errorf("some user IDs are invalid")
+		return nil, apperror.BadRequestError(fmt.Errorf("some user IDs are invalid in create conversation repository"), "some user IDs are invalid")
 	}
 
 	conversation.Members = users

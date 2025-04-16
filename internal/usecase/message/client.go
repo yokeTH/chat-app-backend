@@ -10,6 +10,7 @@ import (
 
 type client struct {
 	isClosed   bool
+	terminate  chan bool
 	wg         *sync.WaitGroup
 	mu         sync.Mutex
 	connection *websocket.Conn
