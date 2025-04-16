@@ -134,7 +134,8 @@ func main() {
 		user := s.Group("/users", authMiddleware.Auth)
 		{
 			user.Get("/", userHandler.HandleListUser)
-			user.Patch("/", userHandler.HandleUpdateUser)
+			user.Get("/me", userHandler.HandleGetMe)
+			user.Patch("/:id", userHandler.HandleUpdateUser)
 		}
 	}
 
