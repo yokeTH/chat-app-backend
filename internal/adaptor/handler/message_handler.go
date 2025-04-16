@@ -15,6 +15,6 @@ func NewMessageHandler(msgUseCase message.MessageUseCase) *messageHandler {
 	}
 }
 
-func (h *messageHandler) HandleMessage(c *websocket.Conn) {
+func (h *messageHandler) HandleWebsocket(c *websocket.Conn) {
 	h.msgUseCase.RegisterClient(c).Wait()
 }

@@ -120,7 +120,7 @@ func main() {
 		message := s.Group("/message")
 		{
 			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
-			message.Get("/ws", websocket.New(msgHandler.HandleMessage))
+			message.Get("/ws", websocket.New(msgHandler.HandleWebsocket))
 		}
 	}
 	{
