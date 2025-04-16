@@ -40,7 +40,7 @@ func (c *conversationHandler) HandleListConversation(ctx *fiber.Ctx) error {
 	page, limit := extractPaginationControl(ctx)
 	user, ok := ctx.Locals("user").(*domain.User)
 	if !ok {
-		return apperror.InternalServerError(errors.New("get user error"), "get user error")
+		return apperror.InternalServerError(errors.New("failed to retrieve user from context"), "unable to retrieve user from context")
 	}
 
 	conversations, last, total, err := c.convUC.GetUserConversations(user.ID, limit, page)
