@@ -5,7 +5,6 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
-	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
 
 type fileHandler struct {
@@ -13,42 +12,11 @@ type fileHandler struct {
 	dto         dto.FileDto
 }
 
-func NewFileHandler(uc file.FileUseCase, private storage.Storage, public storage.Storage) *fileHandler {
+func NewFileHandler(uc file.FileUseCase, dto dto.FileDto) *fileHandler {
 	return &fileHandler{
 		fileUseCase: uc,
-		dto:         dto.NewFileDto(private, public),
+		dto:         dto,
 	}
-}
-
-// CreateFile godoc
-//
-//	@summary		CreateFile
-//	@description	create private file by upload file multipart-form field name file
-//	@tags			file
-//	@accept			x-www-form-urlencoded
-//	@produce 		json
-//	@param			file	formData 	file	true "file data"
-//	@success 		201	{object}	dto.SuccessResponse[dto.FileResponse]	"Created"
-//	@failure		400	{object}	dto.ErrorResponse	"Bad Request"
-//	@failure 		500	{object}	dto.ErrorResponse	"Internal Server Error"
-//	@Router /files/private [post]
-func (h *fileHandler) CreatePrivateFile(c *fiber.Ctx) error {
-	file, err := c.FormFile("file")
-	if err != nil {
-		return apperror.BadRequestError(err, "invalid file")
-	}
-
-	fileData, err := h.fileUseCase.CreatePrivateFile(c.Context(), file)
-	if err != nil {
-		return err
-	}
-
-	response, err := h.dto.ToResponse(*fileData)
-	if err != nil {
-		return err
-	}
-
-	return c.Status(201).JSON(dto.Success(response))
 }
 
 // CreatePublicFile godoc
@@ -62,14 +30,14 @@ func (h *fileHandler) CreatePrivateFile(c *fiber.Ctx) error {
 //	@success 		201	{object}	dto.SuccessResponse[dto.FileResponse]	"Created"
 //	@failure		400	{object}	dto.ErrorResponse	"Bad Request"
 //	@failure 		500	{object}	dto.ErrorResponse	"Internal Server Error"
-//	@Router /files/public [post]
-func (h *fileHandler) CreatePublicFile(c *fiber.Ctx) error {
+//	@Router /files [post]
+func (h *fileHandler) CreateFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return apperror.BadRequestError(err, "invalid file")
 	}
 
-	fileData, err := h.fileUseCase.CreatePublicFile(c.Context(), file)
+	fileData, err := h.fileUseCase.CreateFile(c.Context(), file)
 	if err != nil {
 		return err
 	}

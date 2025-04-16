@@ -9,14 +9,16 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yokeTH/gofiber-template/internal/domain"
+	"github.com/yokeTH/gofiber-template/internal/usecase/user"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
 )
 
 type authMiddleware struct {
+	userUseCase user.UserUseCase
 }
 
-func NewAuthMiddleware() *authMiddleware {
-	return &authMiddleware{}
+func NewAuthMiddleware(userUseCase user.UserUseCase) *authMiddleware {
+	return &authMiddleware{userUseCase: userUseCase}
 }
 
 func (a *authMiddleware) Auth(ctx *fiber.Ctx) error {
@@ -56,5 +58,11 @@ func (a *authMiddleware) Auth(ctx *fiber.Ctx) error {
 	}
 
 	ctx.Locals("profile", profile)
+
+	user, err := a.userUseCase.GoogleLogin(profile)
+	if err != nil {
+		return err
+	}
+	ctx.Locals("user", user)
 	return ctx.Next()
 }
