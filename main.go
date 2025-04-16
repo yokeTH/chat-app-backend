@@ -46,11 +46,6 @@ func main() {
 		log.Fatalf("failed to create public bucket instance: %v", err)
 	}
 
-	privateBucket, err := storage.New(config.PrivateBucket)
-	if err != nil {
-		log.Fatalf("failed to create private bucket instance: %v", err)
-	}
-
 	// Setup repository
 	bookRepo := repository.NewBookRepository(db)
 	fileRepo := repository.NewFileRepository(db)
@@ -62,7 +57,7 @@ func main() {
 
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
-	fileUC := file.NewFileUseCase(fileRepo, publicBucket, privateBucket)
+	fileUC := file.NewFileUseCase(fileRepo, publicBucket)
 	msgUC := message.NewMessageUseCase(msgServer)
 	userUC := user.NewUserUseCase(userRepo)
 	conversationUC := conversation.NewConversationUseCase(conversationRepo)
@@ -70,7 +65,7 @@ func main() {
 	// Setup handlers
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
-	fileHandler := handler.NewFileHandler(fileUC, privateBucket, publicBucket)
+	fileHandler := handler.NewFileHandler(fileUC, publicBucket)
 	msgHandler := handler.NewMessageHandler(msgUC)
 	conversationHandler := handler.NewConversationHandler(conversationUC)
 
@@ -109,8 +104,7 @@ func main() {
 		{
 			file.Get("/", fileHandler.List)
 			file.Get("/:id", fileHandler.GetInfo)
-			file.Post("/private", fileHandler.CreatePrivateFile)
-			file.Post("/public", fileHandler.CreatePublicFile)
+			file.Post("/", fileHandler.CreateFile)
 		}
 	}
 	{

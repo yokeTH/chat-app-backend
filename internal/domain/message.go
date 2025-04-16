@@ -12,14 +12,14 @@ type Message struct {
 	ConversationID string    `gorm:"size:36;not null;index"`
 	SenderID       string    `gorm:"size:36;not null;index"`
 	Content        string    `gorm:"type:text"`
-	SentAt         time.Time `gorm:"autoCreateTime;index"`
+	CreatedAt      time.Time `gorm:"autoCreateTime;index"`
 	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
 	IsDeleted      bool      `gorm:"default:false"`
 
 	// Relationships
 	Conversation Conversation `gorm:"foreignKey:ConversationID"`
 	Sender       User         `gorm:"foreignKey:SenderID"`
-	Attachments  []Attachment `gorm:"foreignKey:MessageID"`
+	Attachments  []File       `gorm:"foreignKey:MessageID"`
 	Reactions    []Reaction   `gorm:"foreignKey:MessageID"`
 }
 

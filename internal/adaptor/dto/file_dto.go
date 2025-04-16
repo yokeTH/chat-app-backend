@@ -1,17 +1,14 @@
 package dto
 
 import (
-	"context"
 	"time"
 
 	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
 	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
 
 type fileDto struct {
-	private storage.Storage
-	public  storage.Storage
+	public storage.Storage
 }
 
 type FileDto interface {
@@ -19,60 +16,42 @@ type FileDto interface {
 	ToResponseList(files []domain.File) (*[]FileResponse, error)
 }
 
-func NewFileDto(pri, pub storage.Storage) *fileDto {
+func NewFileDto(pub storage.Storage) *fileDto {
 	return &fileDto{
-		private: pri,
-		public:  pub,
+		public: pub,
 	}
 }
 
 func (f *fileDto) ToResponse(file domain.File) (*FileResponse, error) {
-	if file.BucketType == domain.PrivateBucketType {
-		url, err := f.private.GetSignedUrl(context.TODO(), file.Key, time.Hour*1)
-		if err != nil {
-			return &FileResponse{
-				ID:        int(file.ID),
-				Name:      file.Name,
-				Url:       "error",
-				CreatedAt: &file.CreatedAt,
-			}, nil
-		}
-
-		return &FileResponse{
-			ID:        int(file.ID),
-			Name:      file.Name,
-			Url:       url,
-			CreatedAt: &file.CreatedAt,
-		}, nil
-
-	} else {
-		url, err := f.public.GetPublicUrl(file.Key)
-		if err != nil {
-			return nil, apperror.InternalServerError(err, "generate url error")
-		}
-		return &FileResponse{
-			ID:        int(file.ID),
-			Name:      file.Name,
-			Url:       url,
-			CreatedAt: &file.CreatedAt,
-		}, nil
+	url, err := f.public.GetPublicUrl(file.Key)
+	if err != nil {
+		return nil, err
 	}
+
+	return &FileResponse{
+		ID:        file.ID,
+		Url:       url,
+		CreatedAt: &file.CreatedAt,
+		MimeType:  file.MimeType,
+	}, nil
+
 }
 
 func (f *fileDto) ToResponseList(files []domain.File) (*[]FileResponse, error) {
 	response := make([]FileResponse, len(files))
 	for i, file := range files {
-		response[i] = FileResponse{
-			ID:   int(file.ID),
-			Name: file.Name,
+		resp, err := f.ToResponse(file)
+		if err != nil {
+			return nil, err
 		}
+		response[i] = *resp
 	}
 	return &response, nil
 }
 
 type FileResponse struct {
-	ID        int        `json:"id"`
-	Name      string     `json:"name"`
+	ID        string     `json:"id"`
 	Url       string     `json:"url,omitempty"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
+	MimeType  string     `json:"mime_type,omitempty"`
 }
