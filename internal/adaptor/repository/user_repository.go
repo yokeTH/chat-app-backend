@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/domain"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
+	"github.com/yokeTH/gofiber-template/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -59,11 +62,29 @@ func (r *userRepository) UpdateUserInfo(userID string, updatedData dto.UpdateUse
 }
 
 func (r *userRepository) SetIsOnline(userID string, isOnline bool) error {
+	user := domain.User{
+		IsOnline: isOnline,
+	}
+
 	if err := r.db.
 		Model(&domain.User{}).
 		Where("id = ?", userID).
-		Updates(domain.User{IsOnline: isOnline}).Error; err != nil {
+		Select("IsOnline").
+		Updates(&user).Error; err != nil {
 		return apperror.InternalServerError(err, "failed to update user info")
 	}
+
 	return nil
+}
+
+func (r *userRepository) ListUser(page, limit int) (*[]domain.User, int, int, error) {
+	var users []domain.User
+	var total, last int
+	if err := r.db.Scopes(db.Paginate(domain.User{}, &limit, &page, &total, &last)).Find(&users).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, 0, 0, apperror.NotFoundError(err, "users not found")
+		}
+		return nil, 0, 0, apperror.InternalServerError(err, "failed to get users")
+	}
+	return &users, last, total, nil
 }

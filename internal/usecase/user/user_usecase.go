@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/domain"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
 )
@@ -35,4 +36,19 @@ func (u *userUseCase) GoogleLogin(profile domain.Profile) (*domain.User, error) 
 	}
 
 	return createdUser, nil
+}
+
+func (u *userUseCase) List(page, limit int) (*[]domain.User, int, int, error) {
+	return u.userRepo.ListUser(page, limit)
+}
+
+func (u *userUseCase) Update(id string, updatedData dto.UpdateUserRequest) (*domain.User, error) {
+	if err := u.userRepo.UpdateUserInfo(id, updatedData); err != nil {
+		return nil, err
+	}
+	user, err := u.userRepo.GetUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

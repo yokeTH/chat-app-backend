@@ -76,6 +76,7 @@ func main() {
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
 	msgHandler := handler.NewMessageHandler(msgUC)
 	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto)
+	userHandler := handler.NewUserHandler(userUC, userDto)
 
 	// Setup middleware
 	authMiddleware := middleware.NewAuthMiddleware(userUC)
@@ -127,6 +128,14 @@ func main() {
 		{
 			conversation.Get("/", conversationHandler.HandleListConversation)
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
+		}
+	}
+	{
+		user := s.Group("/users", authMiddleware.Auth)
+		{
+			user.Get("/", userHandler.HandleListUser)
+			user.Get("/me", userHandler.HandleGetMe)
+			user.Patch("/:id", userHandler.HandleUpdateUser)
 		}
 	}
 
