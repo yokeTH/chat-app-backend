@@ -26,7 +26,7 @@ func NewConversationHandler(convUC conversation.ConversationUseCase, dto dto.Con
 //
 //	@summary		GetConversation
 //	@description	list conversations
-//	@tags			conversations
+//	@tags			conversation
 //	@produce		json
 //	@Param			limit	query	int	false	"Number of history to be retrieved"
 //	@Param			page	query	int	false	"Page to retrieved"
