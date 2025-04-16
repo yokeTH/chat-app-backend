@@ -53,3 +53,8 @@ type ConversationResponse struct {
 	Members  []UserResponse    `json:"members"`
 	Messages []MessageResponse `json:"messages"`
 }
+
+type CreateConversationRequest struct {
+	Name    string   `json:"name" validate:"required,min=2,max=100"`
+	Members []string `json:"members" validate:"required,min=2,dive,required"`
+}

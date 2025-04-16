@@ -5,7 +5,6 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/usecase/file"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
-	"github.com/yokeTH/gofiber-template/pkg/storage"
 )
 
 type fileHandler struct {
@@ -13,10 +12,10 @@ type fileHandler struct {
 	dto         dto.FileDto
 }
 
-func NewFileHandler(uc file.FileUseCase, private storage.Storage) *fileHandler {
+func NewFileHandler(uc file.FileUseCase, dto dto.FileDto) *fileHandler {
 	return &fileHandler{
 		fileUseCase: uc,
-		dto:         dto.NewFileDto(private),
+		dto:         dto,
 	}
 }
 
