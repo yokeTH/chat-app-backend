@@ -63,3 +63,8 @@ type MessageResponse struct {
 	Attachments []FileResponse     `json:"attachments"`
 	Reactions   []ReactionResponse `json:"reactions"`
 }
+
+type CreateMessageRequest struct {
+	ConversationID string `json:"conversation_id" validate:"required,uuid4"`
+	Content        string `json:"content"`
+}

@@ -59,6 +59,7 @@ func main() {
 	fileRepo := repository.NewFileRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	conversationRepo := repository.NewConversationRepository(db)
+	messageRepo := repository.NewMessageRepository(db)
 
 	msgServer := message.NewMessageServer(userRepo)
 	go msgServer.Start(ctx, stop)
@@ -66,7 +67,7 @@ func main() {
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket)
-	msgUC := message.NewMessageUseCase(msgServer)
+	msgUC := message.NewMessageUseCase(msgServer, messageRepo)
 	userUC := user.NewUserUseCase(userRepo)
 	conversationUC := conversation.NewConversationUseCase(conversationRepo)
 
@@ -74,7 +75,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
-	msgHandler := handler.NewMessageHandler(msgUC)
+	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
 	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto)
 	userHandler := handler.NewUserHandler(userUC, userDto)
 
@@ -92,6 +93,12 @@ func main() {
 	)
 
 	// Setup routes
+	{
+		ws := s.Group("/ws", wsMiddleware.RequiredUpgradeProtocol)
+		{
+			ws.Get("/", websocket.New(msgHandler.HandleWebsocket))
+		}
+	}
 	{
 		auth := s.Group("/auth")
 		{
@@ -117,10 +124,10 @@ func main() {
 		}
 	}
 	{
-		message := s.Group("/message")
+		message := s.Group("/messages", authMiddleware.Auth)
 		{
-			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
-			message.Get("/ws", websocket.New(msgHandler.HandleWebsocket))
+			message.Post("/", msgHandler.HandleCreateMessage)
+			message.Get("/:id", msgHandler.HandleGetMessage)
 		}
 	}
 	{
@@ -128,6 +135,7 @@ func main() {
 		{
 			conversation.Get("/", conversationHandler.HandleListConversation)
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
+			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
 		}
 	}
 	{
