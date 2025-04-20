@@ -12,6 +12,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/adaptor/handler"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/middleware"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/repository"
+	wsAdaptor "github.com/yokeTH/gofiber-template/internal/adaptor/websocket"
 	"github.com/yokeTH/gofiber-template/internal/config"
 	"github.com/yokeTH/gofiber-template/internal/server"
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
@@ -59,14 +60,12 @@ func main() {
 	fileRepo := repository.NewFileRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	conversationRepo := repository.NewConversationRepository(db)
-
-	msgServer := message.NewMessageServer(userRepo)
-	go msgServer.Start(ctx, stop)
+	messageRepo := repository.NewMessageRepository(db)
 
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket)
-	msgUC := message.NewMessageUseCase(msgServer)
+	msgUC := message.NewMessageUseCase(messageRepo)
 	userUC := user.NewUserUseCase(userRepo)
 	conversationUC := conversation.NewConversationUseCase(conversationRepo)
 
@@ -74,13 +73,17 @@ func main() {
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
-	msgHandler := handler.NewMessageHandler(msgUC)
+	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
 	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto)
 	userHandler := handler.NewUserHandler(userUC, userDto)
 
 	// Setup middleware
 	authMiddleware := middleware.NewAuthMiddleware(userUC)
 	wsMiddleware := middleware.NewWebsocketMiddleware()
+
+	// Setup message server
+	msgServer := wsAdaptor.NewMessageServer(userUC, msgUC, conversationUC, messageDto)
+	go msgServer.Start(ctx, stop)
 
 	// Setup server
 	s := server.New(
@@ -92,6 +95,12 @@ func main() {
 	)
 
 	// Setup routes
+	{
+		ws := s.Group("/ws", wsMiddleware.RequiredUpgradeProtocol)
+		{
+			ws.Get("/", websocket.New(msgServer.HandleWebsocket))
+		}
+	}
 	{
 		auth := s.Group("/auth")
 		{
@@ -117,10 +126,10 @@ func main() {
 		}
 	}
 	{
-		message := s.Group("/message")
+		message := s.Group("/messages", authMiddleware.Auth)
 		{
-			message.Use("/ws", wsMiddleware.RequiredUpgradeProtocol)
-			message.Get("/ws", websocket.New(msgHandler.HandleMessage))
+			message.Post("/", msgHandler.HandleCreateMessage)
+			message.Get("/:id", msgHandler.HandleGetMessage)
 		}
 	}
 	{
@@ -128,6 +137,7 @@ func main() {
 		{
 			conversation.Get("/", conversationHandler.HandleListConversation)
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
+			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
 		}
 	}
 	{

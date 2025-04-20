@@ -18,4 +18,7 @@ type UserUseCase interface {
 	GoogleLogin(profile domain.Profile) (*domain.User, error)
 	List(page, limit int) (*[]domain.User, int, int, error)
 	Update(id string, updatedData dto.UpdateUserRequest) (*domain.User, error)
+	SetUserOnline(id string) error
+	SetUserOffline(id string) error
+	GetGoogleProfile(googleID string) (*domain.User, error)
 }

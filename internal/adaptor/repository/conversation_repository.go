@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/yokeTH/gofiber-template/internal/domain"
 	"github.com/yokeTH/gofiber-template/pkg/apperror"
@@ -26,10 +27,25 @@ func (r *conversationRepository) GetUserConversations(userID string, limit, page
 		Where("conversation_members.user_id = ?", userID).
 		Scopes(db.Paginate(&domain.Conversation{}, &limit, &page, &total, &last)).
 		Preload("Members").
-		Preload("Messages").
 		Find(&conversations).
 		Error; err != nil {
 		return nil, 0, 0, apperror.InternalServerError(err, "fail to retrieve conversation")
+	}
+
+	for i := range conversations {
+		var lastMessage []domain.Message
+		if err := r.db.
+			Where("conversation_id = ?", conversations[i].ID).
+			Order("created_at DESC").
+			// Limit(10).
+			Preload("Sender").
+			Find(&lastMessage).Error; err != nil {
+			return nil, 0, 0, apperror.InternalServerError(err, "fail to retrieve last message")
+		}
+		sort.Slice(lastMessage, func(i, j int) bool {
+			return lastMessage[i].CreatedAt.Before(lastMessage[j].CreatedAt)
+		})
+		conversations[i].Messages = lastMessage
 	}
 
 	return &conversations, last, total, nil
@@ -65,4 +81,16 @@ func (r *conversationRepository) CreateConversation(usersID []string, createdByI
 	}
 
 	return conversation, nil
+}
+
+func (r *conversationRepository) GetMembers(id string) (*[]domain.User, error) {
+	var conversation domain.Conversation
+	if err := r.db.
+		Where("id = ?", id).
+		Preload("Members").
+		First(&conversation).
+		Error; err != nil {
+		return nil, apperror.InternalServerError(err, "failed to retrieve conversation")
+	}
+	return &conversation.Members, nil
 }

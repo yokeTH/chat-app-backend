@@ -18,7 +18,7 @@ services:
     ports:
       - "5050:80"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - chat_pgadmin_data:/var/lib/pgadmin
     depends_on:
       - db
   storage:
@@ -40,4 +40,4 @@ services:
       - "6379:6379"
 
 volumes:
-  pgadmin_data:
+  chat_pgadmin_data:
