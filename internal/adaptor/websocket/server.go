@@ -22,7 +22,7 @@ type messageServer struct {
 	messageUC      message.MessageUseCase
 	conversationUC conversation.ConversationUseCase
 	messageDto     dto.MessageDto
-	clients        map[string]*Client
+	clients        map[string]*client
 	wrmu           sync.RWMutex
 }
 
@@ -32,7 +32,7 @@ func NewMessageServer(userUC user.UserUseCase, messageUC message.MessageUseCase,
 		messageUC:      messageUC,
 		conversationUC: conversationUC,
 		messageDto:     messageDto,
-		clients:        make(map[string]*Client),
+		clients:        make(map[string]*client),
 	}
 }
 
@@ -43,7 +43,7 @@ func (s *messageServer) Start(ctx context.Context, stop context.CancelFunc) {
 	log.Println("shutting down message server...")
 }
 
-func (s *messageServer) receiveMessageProcess(client *Client) {
+func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 	defer func() {
 		client.isClosed = true
 	}()
@@ -55,6 +55,8 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 		return
 	}
 
+	s.addClient(uuid, client)
+
 	for {
 		messageType, message, err := client.connection.ReadMessage()
 		if err != nil {
@@ -63,8 +65,7 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 			} else {
 				log.Printf("user %s connection closed: %v", client.userID, err)
 			}
-			client.isClosed = true
-			client.terminate <- true
+			client.close()
 			return
 		}
 
@@ -103,9 +104,7 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 				})
 				members, _ := s.conversationUC.GetMembers(chatMsg.ConversationID)
 				for _, member := range *members {
-					if client := s.getClient(member.ID); client != nil {
-						client.message <- createdMessageJson
-					}
+					s.SendMessageToUserID(member.ID, createdMessageJson)
 				}
 				// client.message <- createdMessageJson
 			case "typing_start":
@@ -125,73 +124,81 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 	}
 }
 
-func (m *messageServer) RegisterClient(c *websocket.Conn) *sync.WaitGroup {
+func (m *messageServer) registerClient(c *websocket.Conn) *sync.WaitGroup {
 	m.wrmu.Lock()
 	defer m.wrmu.Unlock()
 	var wg sync.WaitGroup
 	wg.Add(1)
-	client := Client{
+	requestid := c.Locals("requestid").(string)
+	client := client{
+		id:         requestid,
 		message:    make(chan []byte, 10),
 		connection: c,
 		wg:         &wg,
 		terminate:  make(chan bool, 1),
 	}
-	go m.receiveMessageProcess(&client)
+	go m.receiveMessageProcess(requestid, &client)
 	return &wg
 }
 
 func (m *messageServer) HandleWebsocket(c *websocket.Conn) {
-	m.RegisterClient(c).Wait()
+	m.registerClient(c).Wait()
 }
 
-func (m *messageServer) SendMessage(id string, message string) {
-	client := m.getClient(id)
-	if client != nil {
-		client.message <- []byte(message)
-	}
-}
-
-func (m *messageServer) getClient(id string) *Client {
-	client, ok := m.clients[id]
-	if ok {
-		return client
-	}
-	return nil
-}
-
-func (s *messageServer) sendPings() {
-	for id, c := range s.clients {
-		c.mu.Lock()
-
-		if c.isClosed {
-			c.mu.Unlock()
-			continue
+func (m *messageServer) SendMessageToUserID(id string, message []byte) {
+	for _, client := range m.getClientByUserID(id) {
+		if client != nil {
+			client.message <- message
 		}
-
-		if err := c.connection.WriteMessage(websocket.PingMessage, []byte("ping")); err != nil {
-			log.Printf("Ping failed to user %s: %v", id, err)
-			c.isClosed = true
-			c.terminate <- true
-			_ = c.connection.WriteMessage(websocket.CloseMessage, []byte{})
-			_ = c.connection.Close()
-		}
-
-		c.mu.Unlock()
 	}
 }
 
-func (s *messageServer) removeClient(id string) {
+func (m *messageServer) getClientByUserID(userID string) []*client {
+	var clients []*client
+	for _, client := range m.clients {
+		if client != nil && client.userID == userID {
+			clients = append(clients, client)
+		}
+	}
+	return clients
+}
+
+//nolint:unused
+func (s *messageServer) removeClientByUserID(id string) {
 	s.wrmu.Lock()
 	defer s.wrmu.Unlock()
-	client := s.getClient(id)
-	if client != nil {
-		client.wg.Done()
-		delete(s.clients, id)
-		_ = s.userUC.SetUserOffline(id)
+	clients := s.getClientByUserID(id)
+	for _, client := range clients {
+		if client != nil {
+			client.wg.Done()
+			delete(s.clients, client.id)
+			_ = s.userUC.SetUserOffline(id)
+		}
 	}
 }
 
-func (s *messageServer) auth(c *Client) error {
+func (s *messageServer) removeClientByID(id string) {
+	s.wrmu.Lock()
+	defer s.wrmu.Unlock()
+	client, ok := s.clients[id]
+	if !ok {
+		return
+	}
+	client.wg.Done()
+	delete(s.clients, id)
+	userID := client.userID
+	cnt := 0
+	for _, client := range s.clients {
+		if client.userID == userID {
+			cnt++
+		}
+	}
+	if cnt == 0 {
+		_ = s.userUC.SetUserOffline(userID)
+	}
+}
+
+func (s *messageServer) auth(c *client) error {
 	msgType, data, err := c.connection.ReadMessage()
 	if err != nil {
 		log.Printf("auth read error: %v", err)
@@ -223,19 +230,21 @@ func (s *messageServer) auth(c *Client) error {
 	}
 
 	c.userID = userData.ID
-	c.profile = profile
+	c.profile = *profile
 
-	s.wrmu.Lock()
-	s.clients[userData.ID] = c
-	s.wrmu.Unlock()
-
-	return c.connection.WriteMessage(websocket.TextMessage, []byte(profile.Sub))
+	return nil
 }
 
-func (s *messageServer) validateGoogleToken(token string) (domain.Profile, error) {
+func (s *messageServer) addClient(uuid string, client *client) {
+	s.wrmu.Lock()
+	s.clients[uuid] = client
+	s.wrmu.Unlock()
+}
+
+func (s *messageServer) validateGoogleToken(token string) (*domain.Profile, error) {
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v3/userinfo", nil)
 	if err != nil {
-		return domain.Profile{}, fmt.Errorf("creating request: %w", err)
+		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -243,22 +252,22 @@ func (s *messageServer) validateGoogleToken(token string) (domain.Profile, error
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return domain.Profile{}, fmt.Errorf("performing request: %w", err)
+		return nil, fmt.Errorf("performing request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return domain.Profile{}, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	var profile domain.Profile
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
-		return domain.Profile{}, fmt.Errorf("decoding response: %w", err)
+		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
 	if profile.Email == "" {
-		return domain.Profile{}, fmt.Errorf("missing email in profile")
+		return nil, fmt.Errorf("missing email in profile")
 	}
 
-	return profile, nil
+	return &profile, nil
 }

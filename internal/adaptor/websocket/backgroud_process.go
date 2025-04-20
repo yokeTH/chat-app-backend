@@ -26,7 +26,7 @@ func (s *messageServer) broadcastMessages() {
 	for id, c := range s.clients {
 		select {
 		case <-c.terminate:
-			s.removeClient(id)
+			s.removeClientByID(id)
 
 		case msg, ok := <-c.message:
 			c.mu.Lock()
@@ -39,15 +39,30 @@ func (s *messageServer) broadcastMessages() {
 
 			if err := c.connection.WriteMessage(websocket.TextMessage, msg); err != nil {
 				log.Println("write error:", err)
-				c.terminate <- true
-				_ = c.connection.WriteMessage(websocket.CloseMessage, []byte{})
-				c.connection.Close()
-				c.isClosed = true
+				c.close()
 			}
 
 			c.mu.Unlock()
 
 		default:
 		}
+	}
+}
+
+func (s *messageServer) sendPings() {
+	for id, c := range s.clients {
+		c.mu.Lock()
+
+		if c.isClosed {
+			c.mu.Unlock()
+			continue
+		}
+
+		if err := c.connection.WriteMessage(websocket.PingMessage, []byte("ping")); err != nil {
+			log.Printf("Ping failed to user %s: %v", id, err)
+			c.close()
+		}
+
+		c.mu.Unlock()
 	}
 }
