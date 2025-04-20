@@ -9,7 +9,7 @@ const (
 	EventTypeMessage         EventType = "message"
 	EventTypeDisconnect      EventType = "disconnect"
 	EventTypeReactionAdd     EventType = "reaction_add"
-	EventTypeReacttionRemove EventType = "reaction_remove"
+	EventTypeReactionRemove  EventType = "reaction_remove"
 	EventTypeReadReceipt     EventType = "read_receipt"
 	EventTypeTypingEnd       EventType = "typing_end"
 	EventTypeTypingStart     EventType = "typing_start"
