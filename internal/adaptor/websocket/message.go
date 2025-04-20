@@ -132,6 +132,8 @@ func (s *messageServer) broadcastUserStatus(userID string, isOnline bool) {
 	}
 
 	for _, client := range s.clients {
+		client.mu.Lock()
 		client.message <- respMsg
+		client.mu.Unlock()
 	}
 }

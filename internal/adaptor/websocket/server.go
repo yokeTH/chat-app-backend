@@ -124,7 +124,9 @@ func (m *messageServer) HandleWebsocket(c *websocket.Conn) {
 func (m *messageServer) sendMessageToUserID(id string, message []byte) {
 	for _, client := range m.getClientByUserID(id) {
 		if client != nil {
+			client.mu.Lock()
 			client.message <- message
+			client.mu.Unlock()
 		}
 	}
 }
