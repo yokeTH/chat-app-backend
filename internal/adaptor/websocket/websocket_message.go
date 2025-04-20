@@ -2,8 +2,23 @@ package websocket
 
 import "github.com/goccy/go-json"
 
+type EventType string
+
+const (
+	EventTypeConnect         EventType = "connect"
+	EventTypeMessage         EventType = "message"
+	EventTypeDisconnect      EventType = "disconnect"
+	EventTypeReactionAdd     EventType = "reaction_add"
+	EventTypeReacttionRemove EventType = "reaction_remove"
+	EventTypeReadReceipt     EventType = "read_receipt"
+	EventTypeTypingEnd       EventType = "typing_end"
+	EventTypeTypingStart     EventType = "typing_start"
+	EventTypeUserOffline     EventType = "user_offline"
+	EventTypeUserOnline      EventType = "user_online"
+)
+
 type WebSocketMessage struct {
-	Event     string          `json:"event"`
+	Event     EventType       `json:"event"`
 	Payload   json.RawMessage `json:"payload"`
 	CreatedAt int64           `json:"created_at"`
 }

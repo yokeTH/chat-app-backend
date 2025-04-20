@@ -78,7 +78,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 			}
 
 			switch wsMsg.Event {
-			case "message":
+			case EventTypeMessage:
 				var chatMsg ChatMessage
 				if err := json.Unmarshal(wsMsg.Payload, &chatMsg); err != nil {
 					log.Printf("invalid chat message payload: %v", err)
@@ -98,7 +98,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				createdMessageResponse, _ := s.messageDto.ToResponse(createdMessage)
 				payload, _ := json.Marshal(createdMessageResponse)
 				createdMessageJson, _ := json.Marshal(WebSocketMessage{
-					Event:     "message",
+					Event:     EventTypeMessage,
 					Payload:   payload,
 					CreatedAt: time.Now().UnixMilli(),
 				})
@@ -114,7 +114,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				}
 				members, _ := s.conversationUC.GetMembers(typing.ConversationID)
 				msg, _ := json.Marshal(WebSocketMessage{
-					Event:     "typing_start",
+					Event:     EventTypeTypingStart,
 					Payload:   wsMsg.Payload,
 					CreatedAt: time.Now().UnixMilli(),
 				})
@@ -124,7 +124,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 					}
 				}
 				log.Printf("user %s started typing in conversation %s", typing.UserID, typing.ConversationID)
-			case "typing_end":
+			case EventTypeTypingEnd:
 				var typing TypingEvent
 				if err := json.Unmarshal(wsMsg.Payload, &typing); err != nil {
 					log.Printf("invalid typing_end payload: %v", err)
@@ -132,7 +132,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				}
 				members, _ := s.conversationUC.GetMembers(typing.ConversationID)
 				msg, _ := json.Marshal(WebSocketMessage{
-					Event:     "typing_end",
+					Event:     EventTypeTypingEnd,
 					Payload:   wsMsg.Payload,
 					CreatedAt: time.Now().UnixMilli(),
 				})
