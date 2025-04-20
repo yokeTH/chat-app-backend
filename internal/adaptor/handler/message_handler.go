@@ -84,7 +84,7 @@ func (h *messageHandler) HandleGetMessage(c *fiber.Ctx) error {
 		return err
 	}
 	resp := dto.Success(respData)
-	return c.Status(fiber.StatusCreated).JSON(resp)
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 // ListMessages godoc
