@@ -104,9 +104,9 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				})
 				members, _ := s.conversationUC.GetMembers(chatMsg.ConversationID)
 				for _, member := range *members {
-					s.SendMessageToUserID(member.ID, createdMessageJson)
+					s.sendMessageToUserID(member.ID, createdMessageJson)
 				}
-			case "typing_start":
+			case EventTypeTypingStart:
 				var typing TypingEvent
 				if err := json.Unmarshal(wsMsg.Payload, &typing); err != nil {
 					log.Printf("invalid typing_start payload: %v", err)
@@ -120,7 +120,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				})
 				for _, member := range *members {
 					if member.ID != client.userID {
-						s.SendMessageToUserID(member.ID, msg)
+						s.sendMessageToUserID(member.ID, msg)
 					}
 				}
 				log.Printf("user %s started typing in conversation %s", typing.UserID, typing.ConversationID)
@@ -138,7 +138,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				})
 				for _, member := range *members {
 					if member.ID != client.userID {
-						s.SendMessageToUserID(member.ID, msg)
+						s.sendMessageToUserID(member.ID, msg)
 					}
 				}
 				log.Printf("user %s ended typing in conversation %s", typing.UserID, typing.ConversationID)
@@ -173,7 +173,7 @@ func (m *messageServer) HandleWebsocket(c *websocket.Conn) {
 	m.registerClient(c).Wait()
 }
 
-func (m *messageServer) SendMessageToUserID(id string, message []byte) {
+func (m *messageServer) sendMessageToUserID(id string, message []byte) {
 	for _, client := range m.getClientByUserID(id) {
 		if client != nil {
 			client.message <- message
