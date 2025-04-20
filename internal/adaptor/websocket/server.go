@@ -163,6 +163,7 @@ func (m *messageServer) getClientByUserID(userID string) []*client {
 	return clients
 }
 
+//nolint:unused
 func (s *messageServer) removeClientByUserID(id string) {
 	s.wrmu.Lock()
 	defer s.wrmu.Unlock()
@@ -173,6 +174,27 @@ func (s *messageServer) removeClientByUserID(id string) {
 			delete(s.clients, client.id)
 			_ = s.userUC.SetUserOffline(id)
 		}
+	}
+}
+
+func (s *messageServer) removeClientByID(id string) {
+	s.wrmu.Lock()
+	defer s.wrmu.Unlock()
+	client, ok := s.clients[id]
+	if !ok {
+		return
+	}
+	client.wg.Done()
+	delete(s.clients, id)
+	userID := client.userID
+	cnt := 0
+	for _, client := range s.clients {
+		if client.userID == userID {
+			cnt++
+		}
+	}
+	if cnt == 0 {
+		_ = s.userUC.SetUserOffline(userID)
 	}
 }
 

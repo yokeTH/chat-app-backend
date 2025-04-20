@@ -26,7 +26,7 @@ func (s *messageServer) broadcastMessages() {
 	for id, c := range s.clients {
 		select {
 		case <-c.terminate:
-			s.removeClientByUserID(id)
+			s.removeClientByID(id)
 
 		case msg, ok := <-c.message:
 			c.mu.Lock()
