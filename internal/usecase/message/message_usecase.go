@@ -29,7 +29,7 @@ func (uc *messageUseCase) Create(senderID string, req dto.CreateMessageRequest) 
 
 	message, err := uc.repo.FindByID(message.ID)
 	if err != nil {
-		return nil, apperror.InternalServerError(err, "failed get message message")
+		return nil, apperror.InternalServerError(err, "failed to get message")
 	}
 
 	return message, nil
