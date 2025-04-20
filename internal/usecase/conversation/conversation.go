@@ -19,3 +19,7 @@ func (c *conversationUseCase) GetUserConversations(userID string, limit, page in
 func (c *conversationUseCase) CreateConversation(usersID []string, createdByID string, name string) (*domain.Conversation, error) {
 	return c.convRepo.CreateConversation(usersID, createdByID, name)
 }
+
+func (c *conversationUseCase) GetMembers(id string) (*[]domain.User, error) {
+	return c.convRepo.GetMembers(id)
+}

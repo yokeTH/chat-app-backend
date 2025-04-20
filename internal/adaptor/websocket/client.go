@@ -1,4 +1,4 @@
-package message
+package websocket
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/domain"
 )
 
-type client struct {
+type Client struct {
 	isClosed   bool
 	terminate  chan bool
 	wg         *sync.WaitGroup
@@ -19,7 +19,7 @@ type client struct {
 	profile    domain.Profile
 }
 
-func (c *client) sendError(message string) {
+func (c *Client) sendError(message string) {
 	if err := c.connection.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 		c.isClosed = true
 		log.Println("write error:", err)

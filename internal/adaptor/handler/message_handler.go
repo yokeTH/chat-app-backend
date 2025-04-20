@@ -3,7 +3,6 @@ package handler
 import (
 	"errors"
 
-	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/domain"
@@ -21,10 +20,6 @@ func NewMessageHandler(msgUseCase message.MessageUseCase, dto dto.MessageDto) *m
 		msgUseCase: msgUseCase,
 		dto:        dto,
 	}
-}
-
-func (h *messageHandler) HandleWebsocket(c *websocket.Conn) {
-	h.msgUseCase.RegisterClient(c).Wait()
 }
 
 // CreateMessage godoc

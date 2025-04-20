@@ -42,6 +42,7 @@ func main() {
 		&domain.User{},
 		&domain.Conversation{},
 		&domain.Message{},
+		&domain.Reaction{},
 	); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}

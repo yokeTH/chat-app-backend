@@ -52,3 +52,15 @@ func (u *userUseCase) Update(id string, updatedData dto.UpdateUserRequest) (*dom
 	}
 	return user, nil
 }
+
+func (u *userUseCase) SetUserOnline(id string) error {
+	return u.userRepo.SetIsOnline(id, true)
+}
+
+func (u *userUseCase) SetUserOffline(id string) error {
+	return u.userRepo.SetIsOnline(id, false)
+}
+
+func (u *userUseCase) GetGoogleProfile(googleID string) (*domain.User, error) {
+	return u.userRepo.GetUserByProvider("GOOGLE", googleID)
+}

@@ -32,13 +32,14 @@ func (m *messageDto) ToResponse(e *domain.Message) (*MessageResponse, error) {
 	}
 
 	return &MessageResponse{
-		ID:          e.ID,
-		Content:     e.Content,
-		CreatedAt:   e.CreatedAt,
-		UpdatedAt:   e.UpdatedAt,
-		Sender:      *m.userDto.ToResponse(&e.Sender),
-		Attachments: *attachments,
-		Reactions:   *m.reactionDto.ToResponseList(e.Reactions),
+		ID:             e.ID,
+		Content:        e.Content,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
+		Sender:         *m.userDto.ToResponse(&e.Sender),
+		ConversationID: e.ConversationID,
+		Attachments:    *attachments,
+		Reactions:      *m.reactionDto.ToResponseList(e.Reactions),
 	}, nil
 }
 
@@ -55,11 +56,13 @@ func (m *messageDto) ToResponseList(es []domain.Message) (*[]MessageResponse, er
 }
 
 type MessageResponse struct {
-	ID          string             `json:"id"`
-	Content     string             `json:"content"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
-	Sender      UserResponse       `json:"sender"`
+	ID             string       `json:"id"`
+	Content        string       `json:"content"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	Sender         UserResponse `json:"sender"`
+	ConversationID string       `json:"conversation_id"`
+	// Sender      UserResponse       `json:"senderId,omitempty"`
 	Attachments []FileResponse     `json:"attachments"`
 	Reactions   []ReactionResponse `json:"reactions"`
 }

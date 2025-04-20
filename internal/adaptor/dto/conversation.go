@@ -26,11 +26,17 @@ func (c *conversationDto) ToResponse(conversation *domain.Conversation) (*Conver
 	if err != nil {
 		return nil, err
 	}
+	var lastMessage MessageResponse
+	if len(*messages) > 0 {
+		lastMessage = (*messages)[len(*messages)-1]
+	}
 	return &ConversationResponse{
-		ID:       conversation.ID,
-		Name:     conversation.Name,
-		Members:  *c.userDto.ToResponseList(conversation.Members),
-		Messages: *messages,
+		ID:          conversation.ID,
+		Name:        conversation.Name,
+		Members:     *c.userDto.ToResponseList(conversation.Members),
+		Messages:    *messages,
+		IsGroup:     conversation.IsGroup,
+		LastMessage: lastMessage,
 	}, nil
 }
 
@@ -48,10 +54,12 @@ func (c *conversationDto) ToResponseList(conversations []domain.Conversation) (*
 }
 
 type ConversationResponse struct {
-	ID       string            `json:"id"`
-	Name     string            `json:"name"`
-	Members  []UserResponse    `json:"members"`
-	Messages []MessageResponse `json:"messages"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Members     []UserResponse    `json:"members"`
+	Messages    []MessageResponse `json:"messages"`
+	IsGroup     bool              `json:"isGroup"`
+	LastMessage MessageResponse   `json:"lastMessage"`
 }
 
 type CreateConversationRequest struct {

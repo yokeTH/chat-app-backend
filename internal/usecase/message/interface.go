@@ -1,9 +1,6 @@
 package message
 
 import (
-	"sync"
-
-	"github.com/gofiber/contrib/websocket"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
 	"github.com/yokeTH/gofiber-template/internal/domain"
 )
@@ -19,8 +16,6 @@ type MessageRepository interface {
 }
 
 type MessageUseCase interface {
-	RegisterClient(c *websocket.Conn) *sync.WaitGroup
-	SendMessage(id string, message string)
 	Create(senderID string, req dto.CreateMessageRequest) (*domain.Message, error)
 	GetByID(id string) (*domain.Message, error)
 	GetByConversationID(convoID string) (*[]domain.Message, error)

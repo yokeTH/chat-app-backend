@@ -12,6 +12,7 @@ import (
 	"github.com/yokeTH/gofiber-template/internal/adaptor/handler"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/middleware"
 	"github.com/yokeTH/gofiber-template/internal/adaptor/repository"
+	wsAdaptor "github.com/yokeTH/gofiber-template/internal/adaptor/websocket"
 	"github.com/yokeTH/gofiber-template/internal/config"
 	"github.com/yokeTH/gofiber-template/internal/server"
 	"github.com/yokeTH/gofiber-template/internal/usecase/book"
@@ -61,13 +62,10 @@ func main() {
 	conversationRepo := repository.NewConversationRepository(db)
 	messageRepo := repository.NewMessageRepository(db)
 
-	msgServer := message.NewMessageServer(userRepo)
-	go msgServer.Start(ctx, stop)
-
 	// Setup use cases
 	bookUC := book.NewBookUseCase(bookRepo)
 	fileUC := file.NewFileUseCase(fileRepo, publicBucket)
-	msgUC := message.NewMessageUseCase(msgServer, messageRepo)
+	msgUC := message.NewMessageUseCase(messageRepo)
 	userUC := user.NewUserUseCase(userRepo)
 	conversationUC := conversation.NewConversationUseCase(conversationRepo)
 
@@ -83,6 +81,10 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(userUC)
 	wsMiddleware := middleware.NewWebsocketMiddleware()
 
+	// Setup message server
+	msgServer := wsAdaptor.NewMessageServer(userUC, msgUC, conversationUC, messageDto)
+	go msgServer.Start(ctx, stop)
+
 	// Setup server
 	s := server.New(
 		server.WithName(config.Server.Name),
@@ -96,7 +98,7 @@ func main() {
 	{
 		ws := s.Group("/ws", wsMiddleware.RequiredUpgradeProtocol)
 		{
-			ws.Get("/", websocket.New(msgHandler.HandleWebsocket))
+			ws.Get("/", websocket.New(msgServer.HandleWebsocket))
 		}
 	}
 	{
