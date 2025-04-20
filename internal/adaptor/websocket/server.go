@@ -223,7 +223,7 @@ func (s *messageServer) auth(c *Client) error {
 	}
 
 	c.userID = userData.ID
-	c.profile = profile
+	c.profile = *profile
 
 	s.wrmu.Lock()
 	s.clients[userData.ID] = c
@@ -232,10 +232,10 @@ func (s *messageServer) auth(c *Client) error {
 	return c.connection.WriteMessage(websocket.TextMessage, []byte(profile.Sub))
 }
 
-func (s *messageServer) validateGoogleToken(token string) (domain.Profile, error) {
+func (s *messageServer) validateGoogleToken(token string) (*domain.Profile, error) {
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v3/userinfo", nil)
 	if err != nil {
-		return domain.Profile{}, fmt.Errorf("creating request: %w", err)
+		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -243,22 +243,22 @@ func (s *messageServer) validateGoogleToken(token string) (domain.Profile, error
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return domain.Profile{}, fmt.Errorf("performing request: %w", err)
+		return nil, fmt.Errorf("performing request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return domain.Profile{}, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	var profile domain.Profile
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
-		return domain.Profile{}, fmt.Errorf("decoding response: %w", err)
+		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
 	if profile.Email == "" {
-		return domain.Profile{}, fmt.Errorf("missing email in profile")
+		return nil, fmt.Errorf("missing email in profile")
 	}
 
-	return profile, nil
+	return &profile, nil
 }
