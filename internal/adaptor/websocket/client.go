@@ -1,14 +1,13 @@
 package websocket
 
 import (
-	"log"
 	"sync"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/yokeTH/gofiber-template/internal/domain"
 )
 
-type Client struct {
+type client struct {
 	id         string
 	isClosed   bool
 	terminate  chan bool
@@ -20,15 +19,14 @@ type Client struct {
 	profile    domain.Profile
 }
 
-func (c *Client) sendError(message string) {
-	if err := c.connection.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-		c.isClosed = true
-		log.Println("write error:", err)
-		if err := c.connection.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
-			log.Print("write close err:", err)
-		}
-		c.connection.Close()
-	}
+func (c *client) sendError(message string) {
+	_ = c.connection.WriteMessage(websocket.TextMessage, []byte(message))
+	c.connection.Close()
+}
+
+func (c *client) close() {
+	_ = c.connection.WriteMessage(websocket.CloseMessage, []byte{})
+	c.terminate <- true
 	c.isClosed = true
 	c.connection.Close()
 }
