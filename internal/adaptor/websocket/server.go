@@ -89,7 +89,11 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 					Content:        chatMsg.Content,
 				}
 
-				createdMessage, _ := s.messageUC.Create(chatMsg.SenderID, content)
+				createdMessage, err := s.messageUC.Create(chatMsg.SenderID, content)
+				if err != nil {
+					log.Printf("failed to create message: %v", err)
+					continue
+				}
 				createdMessageResponse, _ := s.messageDto.ToResponse(createdMessage)
 				payload, _ := json.Marshal(createdMessageResponse)
 				createdMessageJson, _ := json.Marshal(WebSocketMessage{
