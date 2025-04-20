@@ -104,7 +104,7 @@ func (s *messageServer) handleEventTypeTyping(payload json.RawMessage, currentUs
 	return nil
 }
 
-func (s *messageServer) boardcaseUserStatus(userID string, isOnline bool) {
+func (s *messageServer) broadcastUserStatus(userID string, isOnline bool) {
 	var status UserStatusType
 	if isOnline {
 		status = UserStatusTypeOnline

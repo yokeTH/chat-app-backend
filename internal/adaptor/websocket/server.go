@@ -171,7 +171,7 @@ func (s *messageServer) removeClientByID(id string) {
 	}
 	if cnt == 0 {
 		_ = s.userUC.SetUserOffline(userID)
-		go s.boardcaseUserStatus(client.userID, false)
+		go s.broadcastUserStatus(client.userID, false)
 	}
 }
 
@@ -213,7 +213,7 @@ func (s *messageServer) auth(c *client) error {
 }
 
 func (s *messageServer) addClient(uuid string, client *client) {
-	go s.boardcaseUserStatus(client.userID, true)
+	go s.broadcastUserStatus(client.userID, true)
 	s.wrmu.Lock()
 	s.clients[uuid] = client
 	s.wrmu.Unlock()
