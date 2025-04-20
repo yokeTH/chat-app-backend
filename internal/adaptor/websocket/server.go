@@ -78,7 +78,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 			}
 
 			switch wsMsg.Event {
-			case "message":
+			case EventTypeMessage:
 				var chatMsg ChatMessage
 				if err := json.Unmarshal(wsMsg.Payload, &chatMsg); err != nil {
 					log.Printf("invalid chat message payload: %v", err)
@@ -98,7 +98,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				createdMessageResponse, _ := s.messageDto.ToResponse(createdMessage)
 				payload, _ := json.Marshal(createdMessageResponse)
 				createdMessageJson, _ := json.Marshal(WebSocketMessage{
-					Event:     "message",
+					Event:     EventTypeMessage,
 					Payload:   payload,
 					CreatedAt: time.Now().UnixMilli(),
 				})
@@ -106,14 +106,42 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 				for _, member := range *members {
 					s.SendMessageToUserID(member.ID, createdMessageJson)
 				}
-				// client.message <- createdMessageJson
 			case "typing_start":
 				var typing TypingEvent
 				if err := json.Unmarshal(wsMsg.Payload, &typing); err != nil {
 					log.Printf("invalid typing_start payload: %v", err)
 					continue
 				}
+				members, _ := s.conversationUC.GetMembers(typing.ConversationID)
+				msg, _ := json.Marshal(WebSocketMessage{
+					Event:     EventTypeTypingStart,
+					Payload:   wsMsg.Payload,
+					CreatedAt: time.Now().UnixMilli(),
+				})
+				for _, member := range *members {
+					if member.ID != client.userID {
+						s.SendMessageToUserID(member.ID, msg)
+					}
+				}
 				log.Printf("user %s started typing in conversation %s", typing.UserID, typing.ConversationID)
+			case EventTypeTypingEnd:
+				var typing TypingEvent
+				if err := json.Unmarshal(wsMsg.Payload, &typing); err != nil {
+					log.Printf("invalid typing_end payload: %v", err)
+					continue
+				}
+				members, _ := s.conversationUC.GetMembers(typing.ConversationID)
+				msg, _ := json.Marshal(WebSocketMessage{
+					Event:     EventTypeTypingEnd,
+					Payload:   wsMsg.Payload,
+					CreatedAt: time.Now().UnixMilli(),
+				})
+				for _, member := range *members {
+					if member.ID != client.userID {
+						s.SendMessageToUserID(member.ID, msg)
+					}
+				}
+				log.Printf("user %s ended typing in conversation %s", typing.UserID, typing.ConversationID)
 			default:
 				log.Printf("unhandled WebSocket event: %s", wsMsg.Event)
 			}
