@@ -9,6 +9,7 @@ import (
 )
 
 type Client struct {
+	id         string
 	isClosed   bool
 	terminate  chan bool
 	wg         *sync.WaitGroup

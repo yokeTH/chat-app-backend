@@ -43,7 +43,7 @@ func (s *messageServer) Start(ctx context.Context, stop context.CancelFunc) {
 	log.Println("shutting down message server...")
 }
 
-func (s *messageServer) receiveMessageProcess(client *Client) {
+func (s *messageServer) receiveMessageProcess(uuid string, client *Client) {
 	defer func() {
 		client.isClosed = true
 	}()
@@ -54,6 +54,8 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 		client.sendError("Authentication failed")
 		return
 	}
+
+	s.addClient(uuid, client)
 
 	for {
 		messageType, message, err := client.connection.ReadMessage()
@@ -103,9 +105,7 @@ func (s *messageServer) receiveMessageProcess(client *Client) {
 				})
 				members, _ := s.conversationUC.GetMembers(chatMsg.ConversationID)
 				for _, member := range *members {
-					if client := s.getClient(member.ID); client != nil {
-						client.message <- createdMessageJson
-					}
+					s.SendMessage(member.ID, createdMessageJson)
 				}
 				// client.message <- createdMessageJson
 			case "typing_start":
@@ -130,13 +130,15 @@ func (m *messageServer) RegisterClient(c *websocket.Conn) *sync.WaitGroup {
 	defer m.wrmu.Unlock()
 	var wg sync.WaitGroup
 	wg.Add(1)
+	requestid := c.Locals("requestid").(string)
 	client := Client{
+		id:         requestid,
 		message:    make(chan []byte, 10),
 		connection: c,
 		wg:         &wg,
 		terminate:  make(chan bool, 1),
 	}
-	go m.receiveMessageProcess(&client)
+	go m.receiveMessageProcess(requestid, &client)
 	return &wg
 }
 
@@ -144,19 +146,22 @@ func (m *messageServer) HandleWebsocket(c *websocket.Conn) {
 	m.RegisterClient(c).Wait()
 }
 
-func (m *messageServer) SendMessage(id string, message string) {
-	client := m.getClient(id)
-	if client != nil {
-		client.message <- []byte(message)
+func (m *messageServer) SendMessage(id string, message []byte) {
+	for _, client := range m.getClient(id) {
+		if client != nil {
+			client.message <- message
+		}
 	}
 }
 
-func (m *messageServer) getClient(id string) *Client {
-	client, ok := m.clients[id]
-	if ok {
-		return client
+func (m *messageServer) getClient(userID string) []*Client {
+	var clients []*Client
+	for _, client := range m.clients {
+		if client != nil && client.userID == userID {
+			clients = append(clients, client)
+		}
 	}
-	return nil
+	return clients
 }
 
 func (s *messageServer) sendPings() {
@@ -183,11 +188,13 @@ func (s *messageServer) sendPings() {
 func (s *messageServer) removeClient(id string) {
 	s.wrmu.Lock()
 	defer s.wrmu.Unlock()
-	client := s.getClient(id)
-	if client != nil {
-		client.wg.Done()
-		delete(s.clients, id)
-		_ = s.userUC.SetUserOffline(id)
+	clients := s.getClient(id)
+	for _, client := range clients {
+		if client != nil {
+			client.wg.Done()
+			delete(s.clients, client.id)
+			_ = s.userUC.SetUserOffline(id)
+		}
 	}
 }
 
@@ -225,11 +232,13 @@ func (s *messageServer) auth(c *Client) error {
 	c.userID = userData.ID
 	c.profile = *profile
 
-	s.wrmu.Lock()
-	s.clients[userData.ID] = c
-	s.wrmu.Unlock()
+	return nil
+}
 
-	return c.connection.WriteMessage(websocket.TextMessage, []byte(profile.Sub))
+func (s *messageServer) addClient(uuid string, client *Client) {
+	s.wrmu.Lock()
+	s.clients[uuid] = client
+	s.wrmu.Unlock()
 }
 
 func (s *messageServer) validateGoogleToken(token string) (*domain.Profile, error) {
