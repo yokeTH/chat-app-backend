@@ -13,8 +13,7 @@ const (
 	EventTypeReadReceipt    EventType = "read_receipt"
 	EventTypeTypingEnd      EventType = "typing_end"
 	EventTypeTypingStart    EventType = "typing_start"
-	EventTypeUserOffline    EventType = "user_offline"
-	EventTypeUserOnline     EventType = "user_online"
+	EventTypeUserStatus     EventType = "user_status"
 )
 
 type WebSocketMessage struct {

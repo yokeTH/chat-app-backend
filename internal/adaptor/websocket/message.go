@@ -103,3 +103,35 @@ func (s *messageServer) handleEventTypeTyping(payload json.RawMessage, currentUs
 	}
 	return nil
 }
+
+func (s *messageServer) boardcaseUserStatus(userID string, isOnline bool) {
+	var status UserStatusType
+	if isOnline {
+		status = UserStatusTypeOnline
+	} else {
+		status = UserStatusTypeOffline
+	}
+
+	userStatusString, err := json.Marshal(UserStatus{
+		UserID: userID,
+		Status: status,
+	})
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return
+	}
+
+	respMsg, err := json.Marshal(WebSocketMessage{
+		Event:     EventTypeUserStatus,
+		Payload:   userStatusString,
+		CreatedAt: time.Now().UnixMilli(),
+	})
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return
+	}
+
+	for _, client := range s.clients {
+		client.message <- respMsg
+	}
+}
