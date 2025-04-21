@@ -131,9 +131,33 @@ func (s *messageServer) broadcastUserStatus(userID string, isOnline bool) {
 		return
 	}
 
+	s.broadcast(respMsg)
+}
+
+func (s *messageServer) broadcast(message []byte) {
 	for _, client := range s.clients {
 		client.mu.Lock()
-		client.message <- respMsg
+		client.message <- message
 		client.mu.Unlock()
 	}
+}
+
+func (s *messageServer) BroadcastName(userID, name string) {
+	payload, err := json.Marshal(UserStatus{
+		UserID: userID,
+		Name:   name,
+	})
+	if err != nil {
+		return
+	}
+
+	msg, err := json.Marshal(WebSocketMessage{
+		Event:     EventTypeUserStatus,
+		Payload:   payload,
+		CreatedAt: time.Now().UnixMilli(),
+	})
+	if err != nil {
+		return
+	}
+	s.broadcast(msg)
 }

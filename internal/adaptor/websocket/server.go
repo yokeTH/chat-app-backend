@@ -26,6 +26,10 @@ type messageServer struct {
 	wrmu           sync.RWMutex
 }
 
+type MessageServer interface {
+	BroadcastName(userID, name string)
+}
+
 func NewMessageServer(userUC user.UserUseCase, messageUC message.MessageUseCase, conversationUC conversation.ConversationUseCase, messageDto dto.MessageDto) *messageServer {
 	return &messageServer{
 		userUC:         userUC,
@@ -83,7 +87,7 @@ func (s *messageServer) receiveMessageProcess(uuid string, client *client) {
 					continue
 				}
 			case EventTypeTypingStart:
-				if err := s.handleEventTypeTyping(wsMsg.Payload, client.userID, false); err != nil {
+				if err := s.handleEventTypeTyping(wsMsg.Payload, client.userID, true); err != nil {
 					continue
 				}
 			case EventTypeTypingEnd:

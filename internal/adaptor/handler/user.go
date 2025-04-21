@@ -6,20 +6,23 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/websocket"
 	"github.com/yokeTH/chat-app-backend/internal/domain"
 	"github.com/yokeTH/chat-app-backend/internal/usecase/user"
 	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type userHandler struct {
-	userUC user.UserUseCase
-	dto    dto.UserDto
+	userUC  user.UserUseCase
+	dto     dto.UserDto
+	mServer websocket.MessageServer
 }
 
-func NewUserHandler(userUC user.UserUseCase, dto dto.UserDto) *userHandler {
+func NewUserHandler(userUC user.UserUseCase, dto dto.UserDto, mServer websocket.MessageServer) *userHandler {
 	return &userHandler{
-		userUC: userUC,
-		dto:    dto,
+		userUC:  userUC,
+		dto:     dto,
+		mServer: mServer,
 	}
 }
 
@@ -90,6 +93,9 @@ func (h *userHandler) HandleUpdateUser(c *fiber.Ctx) error {
 
 	respData := h.dto.ToResponse(user)
 	resp := dto.Success(respData)
+
+	// broadcast
+	h.mServer.BroadcastName(user.ID, body.Name)
 
 	return c.Status(200).JSON(resp)
 }

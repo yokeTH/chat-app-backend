@@ -53,6 +53,7 @@ const (
 )
 
 type UserStatus struct {
-	UserID string         `json:"userId"`
+	UserID string         `json:"userId,omitempty"`
 	Status UserStatusType `json:"status"`
+	Name   string         `json:"name,omitempty"`
 }
