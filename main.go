@@ -69,21 +69,21 @@ func main() {
 	userUC := user.NewUserUseCase(userRepo)
 	conversationUC := conversation.NewConversationUseCase(conversationRepo)
 
+	// Setup message server
+	msgServer := wsAdaptor.NewMessageServer(userUC, msgUC, conversationUC, messageDto)
+	go msgServer.Start(ctx, stop)
+
 	// Setup handlers
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
 	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
 	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto)
-	userHandler := handler.NewUserHandler(userUC, userDto)
+	userHandler := handler.NewUserHandler(userUC, userDto, msgServer)
 
 	// Setup middleware
 	authMiddleware := middleware.NewAuthMiddleware(userUC)
 	wsMiddleware := middleware.NewWebsocketMiddleware()
-
-	// Setup message server
-	msgServer := wsAdaptor.NewMessageServer(userUC, msgUC, conversationUC, messageDto)
-	go msgServer.Start(ctx, stop)
 
 	// Setup server
 	s := server.New(
