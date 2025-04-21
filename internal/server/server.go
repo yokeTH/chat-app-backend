@@ -7,15 +7,12 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/gofiber/swagger"
-	"github.com/swaggo/swag"
-	"github.com/yokeTH/chat-app-backend/docs"
 	"github.com/yokeTH/chat-app-backend/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/pkg/scalar"
 )
 
 type Config struct {
@@ -119,14 +116,8 @@ func New(opts ...ServerOption) *Server {
 		},
 	}))
 
-	swag.Register(docs.SwaggerInfo.InstanceName(), docs.SwaggerInfo)
-
 	if server.config.Env == "dev" {
-		app.Get("/swagger/*", basicauth.New(basicauth.Config{
-			Users: map[string]string{
-				server.config.SwaggerUser: server.config.SwaggerPass,
-			},
-		}), swagger.HandlerDefault)
+		app.Use(scalar.New())
 	}
 
 	server.App = app
