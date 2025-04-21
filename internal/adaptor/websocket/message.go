@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
-	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
 )
 
 func (s *messageServer) handleEventTypeMessage(payload json.RawMessage) error {

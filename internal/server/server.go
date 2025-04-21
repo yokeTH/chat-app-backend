@@ -14,8 +14,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/swagger"
 	"github.com/swaggo/swag"
-	"github.com/yokeTH/gofiber-template/docs"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/docs"
+	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type Config struct {

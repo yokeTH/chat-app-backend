@@ -2,9 +2,9 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
-	"github.com/yokeTH/gofiber-template/internal/usecase/file"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/file"
+	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type fileHandler struct {

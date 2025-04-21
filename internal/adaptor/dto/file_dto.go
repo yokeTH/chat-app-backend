@@ -3,8 +3,8 @@ package dto
 import (
 	"time"
 
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/pkg/storage"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/pkg/storage"
 )
 
 type fileDto struct {

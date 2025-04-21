@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/internal/usecase/message"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/message"
+	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type messageHandler struct {

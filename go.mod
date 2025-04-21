@@ -1,4 +1,4 @@
-module github.com/yokeTH/gofiber-template
+module github.com/yokeTH/chat-app-backend
 
 go 1.24.0
 

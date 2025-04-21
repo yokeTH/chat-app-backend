@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/pkg/db"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/pkg/db"
 )
 
 func main() {

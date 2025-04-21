@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/internal/usecase/user"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/user"
+	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type authHandler struct {

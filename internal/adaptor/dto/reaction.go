@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/yokeTH/gofiber-template/internal/domain"
+import "github.com/yokeTH/chat-app-backend/internal/domain"
 
 type reactionDto struct {
 	userDto UserDto

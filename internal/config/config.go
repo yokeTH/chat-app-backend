@@ -4,9 +4,9 @@ import (
 	"github.com/caarlos0/env/v11"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/joho/godotenv"
-	"github.com/yokeTH/gofiber-template/internal/server"
-	"github.com/yokeTH/gofiber-template/pkg/db"
-	"github.com/yokeTH/gofiber-template/pkg/storage"
+	"github.com/yokeTH/chat-app-backend/internal/server"
+	"github.com/yokeTH/chat-app-backend/pkg/db"
+	"github.com/yokeTH/chat-app-backend/pkg/storage"
 )
 
 type config struct {

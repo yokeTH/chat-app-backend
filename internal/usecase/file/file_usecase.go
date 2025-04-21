@@ -6,9 +6,9 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/pkg/apperror"
-	"github.com/yokeTH/gofiber-template/pkg/storage"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/pkg/apperror"
+	"github.com/yokeTH/chat-app-backend/pkg/storage"
 )
 
 type fileUseCase struct {

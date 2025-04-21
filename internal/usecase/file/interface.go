@@ -4,7 +4,7 @@ import (
 	"context"
 	"mime/multipart"
 
-	"github.com/yokeTH/gofiber-template/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
 )
 
 type FileRepository interface {

@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/contrib/websocket"
-	"github.com/yokeTH/gofiber-template/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
 )
 
 type client struct {

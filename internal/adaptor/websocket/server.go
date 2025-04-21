@@ -10,11 +10,11 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/gofiber/contrib/websocket"
-	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
-	"github.com/yokeTH/gofiber-template/internal/domain"
-	"github.com/yokeTH/gofiber-template/internal/usecase/conversation"
-	"github.com/yokeTH/gofiber-template/internal/usecase/message"
-	"github.com/yokeTH/gofiber-template/internal/usecase/user"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/conversation"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/message"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/user"
 )
 
 type messageServer struct {

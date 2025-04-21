@@ -1,8 +1,8 @@
 package user
 
 import (
-	"github.com/yokeTH/gofiber-template/internal/adaptor/dto"
-	"github.com/yokeTH/gofiber-template/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
 )
 
 type UserRepository interface {

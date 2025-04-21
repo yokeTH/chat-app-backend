@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/yokeTH/gofiber-template/internal/domain"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
 )
 
 type MessageDto interface {
