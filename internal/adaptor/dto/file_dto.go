@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"context"
 	"time"
 
 	"github.com/yokeTH/chat-app-backend/internal/domain"
@@ -23,7 +24,7 @@ func NewFileDto(pub storage.Storage) *fileDto {
 }
 
 func (f *fileDto) ToResponse(file domain.File) (*FileResponse, error) {
-	url, err := f.public.GetPublicUrl(file.Key)
+	url, err := f.public.GetSignedUrl(context.TODO(), file.Key, time.Hour*1)
 	if err != nil {
 		return nil, err
 	}

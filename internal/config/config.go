@@ -10,10 +10,9 @@ import (
 )
 
 type config struct {
-	Server        server.Config  `envPrefix:"SERVER_"`
-	PSQL          db.DBConfig    `envPrefix:"POSTGRES_"`
-	PublicBucket  storage.Config `envPrefix:"PUBLIC_"`
-	PrivateBucket storage.Config `envPrefix:"PRIVATE_"`
+	Server       server.Config  `envPrefix:"SERVER_"`
+	PSQL         db.DBConfig    `envPrefix:"POSTGRES_"`
+	PublicBucket storage.Config `envPrefix:"PUBLIC_"`
 }
 
 func Load() *config {
