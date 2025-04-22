@@ -54,7 +54,7 @@ func (h *fileHandler) CreateFile(c *fiber.Ctx) error {
 
 	conversationID := c.Params("id")
 	if conversationID == "" {
-		return apperror.BadRequestError(err, "required conversationID")
+		return apperror.BadRequestError(errors.New("missing conversationID"), "required conversationID")
 	}
 
 	user, ok := c.Locals("user").(*domain.User)
