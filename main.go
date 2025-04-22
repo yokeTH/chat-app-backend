@@ -132,6 +132,7 @@ func main() {
 			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
 			conversation.Get("/:id", conversationHandler.HandleGetConversation)
 			conversation.Post("/:id/files", fileHandler.CreateFile)
+			conversation.Post("/:id/join", conversationHandler.HandleJoinConversation)
 		}
 	}
 	{

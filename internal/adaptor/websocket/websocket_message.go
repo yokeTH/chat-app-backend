@@ -5,15 +5,16 @@ import "github.com/goccy/go-json"
 type EventType string
 
 const (
-	EventTypeConnect        EventType = "connect"
-	EventTypeMessage        EventType = "message"
-	EventTypeDisconnect     EventType = "disconnect"
-	EventTypeReactionAdd    EventType = "reaction_add"
-	EventTypeReactionRemove EventType = "reaction_remove"
-	EventTypeReadReceipt    EventType = "read_receipt"
-	EventTypeTypingEnd      EventType = "typing_end"
-	EventTypeTypingStart    EventType = "typing_start"
-	EventTypeUserStatus     EventType = "user_status"
+	EventTypeConnect            EventType = "connect"
+	EventTypeMessage            EventType = "message"
+	EventTypeDisconnect         EventType = "disconnect"
+	EventTypeReactionAdd        EventType = "reaction_add"
+	EventTypeReactionRemove     EventType = "reaction_remove"
+	EventTypeReadReceipt        EventType = "read_receipt"
+	EventTypeTypingEnd          EventType = "typing_end"
+	EventTypeTypingStart        EventType = "typing_start"
+	EventTypeUserStatus         EventType = "user_status"
+	EventTypeConversationUpdate EventType = "conversation_update"
 )
 
 type WebSocketMessage struct {

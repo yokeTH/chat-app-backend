@@ -143,8 +143,6 @@ func (c *conversationHandler) HandleCreateConversation(ctx *fiber.Ctx) error {
 //	@tags			conversation
 //	@Security		Bearer
 //	@produce		json
-//	@Param			limit	query	int		false	"Number of history to be retrieved"
-//	@Param			page	query	int		false	"Page to retrieved"
 //	@Param			id		path	string	true	"conversation id"
 //	@response		200	{object}	dto.SuccessResponse[dto.ConversationResponse]	"OK"
 //	@response		400	{object}	dto.ErrorResponse	"Bad Request"
@@ -164,6 +162,76 @@ func (c *conversationHandler) HandleGetConversation(ctx *fiber.Ctx) error {
 		return apperror.InternalServerError(err, "failed to create response data")
 	}
 	resp := dto.Success(*respData)
+
+	return ctx.JSON(resp)
+}
+
+// JoinConversations godoc
+//
+//	@summary		Join Conversation by id
+//	@description	Join Conversation by id
+//	@tags			conversation
+//	@Security		Bearer
+//	@produce		json
+//	@Param			id		path	string	true	"conversation id"
+//	@response		200	{object}	dto.SuccessResponse[dto.ConversationResponse]	"OK"
+//	@response		400	{object}	dto.ErrorResponse	"Bad Request"
+//	@response		401	{object}	dto.ErrorResponse	"Unauthorized"
+//	@response		500	{object}	dto.ErrorResponse	"Internal Server Error"
+//	@Router /conversations/{id}/join [post]
+func (c *conversationHandler) HandleJoinConversation(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+
+	user, ok := ctx.Locals("user").(*domain.User)
+	if !ok {
+		return apperror.InternalServerError(errors.New("get profile error"), "get profile error")
+	}
+
+	if err := c.convUC.AddMember(id, user.ID); err != nil {
+		return err
+	}
+
+	conversation, err := c.convUC.GetConversation(id)
+	if err != nil {
+		return err
+	}
+	respData, err := c.dto.ToResponse(conversation)
+	if err != nil {
+		return apperror.InternalServerError(err, "failed to create response data")
+	}
+	resp := dto.Success(*respData)
+
+	c.mServer.BoardcastConversation(*respData)
+
+	system, err := c.msgUC.CreateSystemMessage(conversation.ID, fmt.Sprintf("%s has entered the chat", user.Name))
+	if err != nil {
+		return err
+	}
+
+	createdMessageResponse, err := c.messageDto.ToResponse(system)
+	if err != nil {
+		log.Printf("failed to transform to dto: %v", err)
+		return err
+	}
+
+	payloadResponse, err := json.Marshal(createdMessageResponse)
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return err
+	}
+
+	createdMessageJson, err := json.Marshal(websocket.WebSocketMessage{
+		Event:     websocket.EventTypeMessage,
+		Payload:   payloadResponse,
+		CreatedAt: time.Now().UnixMilli(),
+	})
+	if err != nil {
+		return apperror.InternalServerError(err, err.Error())
+	}
+
+	if err := c.mServer.BroadcastToMembersInConversation(conversation.ID, createdMessageJson); err != nil {
+		return apperror.InternalServerError(err, "broadcast error")
+	}
 
 	return ctx.JSON(resp)
 }

@@ -27,3 +27,7 @@ func (c *conversationUseCase) GetMembers(id string) (*[]domain.User, error) {
 func (c *conversationUseCase) GetConversation(id string) (*domain.Conversation, error) {
 	return c.convRepo.GetConversation(id)
 }
+
+func (c *conversationUseCase) AddMember(conversationID, userID string) error {
+	return c.convRepo.AddMemberToConversation(conversationID, userID)
+}

@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,15 +34,6 @@ type Message struct {
 func (m *Message) BeforeCreate(tx *gorm.DB) error {
 	if m.ID == "" {
 		m.ID = uuid.New().String()
-	}
-	var count int64
-	if err := tx.Table("conversation_members").
-		Where("conversation_id = ? AND user_id = ?", m.ConversationID, m.SenderID).
-		Count(&count).Error; err != nil {
-		return err
-	}
-	if count == 0 {
-		return errors.New("user is not a member of the conversation")
 	}
 	return nil
 }

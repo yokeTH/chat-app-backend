@@ -159,3 +159,16 @@ func (r *conversationRepository) GetConversation(id string) (*domain.Conversatio
 
 	return &conversation, nil
 }
+
+func (r *conversationRepository) AddMemberToConversation(conversationID, userID string) error {
+	if err := r.db.
+		Table("conversation_members").
+		Create(map[string]any{
+			"conversation_id": conversationID,
+			"user_id":         userID,
+		}).Error; err != nil {
+		return apperror.InternalServerError(err, "failed to add member")
+	}
+
+	return nil
+}

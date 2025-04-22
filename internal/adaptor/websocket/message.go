@@ -150,6 +150,25 @@ func (s *messageServer) broadcast(message []byte) {
 	}
 }
 
+func (s *messageServer) BoardcastConversation(conversation dto.ConversationResponse) {
+	payloadResponse, err := json.Marshal(conversation)
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return
+	}
+
+	wsMsg, err := json.Marshal(WebSocketMessage{
+		Event:     EventTypeConversationUpdate,
+		Payload:   payloadResponse,
+		CreatedAt: time.Now().UnixMilli(),
+	})
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return
+	}
+	s.broadcast(wsMsg)
+}
+
 func (s *messageServer) BroadcastName(userID, name string) {
 	payload, err := json.Marshal(UserStatus{
 		UserID: userID,

@@ -29,6 +29,7 @@ type messageServer struct {
 type MessageServer interface {
 	BroadcastName(userID, name string)
 	BroadcastToMembersInConversation(conversationID string, msg []byte) error
+	BoardcastConversation(conversation dto.ConversationResponse)
 }
 
 func NewMessageServer(userUC user.UserUseCase, messageUC message.MessageUseCase, conversationUC conversation.ConversationUseCase, messageDto dto.MessageDto) *messageServer {
