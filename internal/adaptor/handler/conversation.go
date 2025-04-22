@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -102,7 +103,7 @@ func (c *conversationHandler) HandleCreateConversation(ctx *fiber.Ctx) error {
 	}
 	resp := dto.Success(respData)
 
-	system, err := c.msgUC.CreateSystemMessage(conversation.ID, "chat has been created")
+	system, err := c.msgUC.CreateSystemMessage(conversation.ID, fmt.Sprintf("Chat has been created by %s", user.Name))
 	if err != nil {
 		return err
 	}

@@ -101,7 +101,7 @@ func (r *conversationRepository) GetConversation(id string) (*domain.Conversatio
 	if err := r.db.
 		Where("id = ?", id).
 		Preload("Members").
-		Find(&conversation).
+		First(&conversation).
 		Error; err != nil {
 		return nil, apperror.InternalServerError(err, "fail to retrieve conversation")
 	}
