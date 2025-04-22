@@ -138,6 +138,7 @@ func main() {
 			conversation.Get("/", conversationHandler.HandleListConversation)
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
 			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
+			conversation.Get("/:id", conversationHandler.HandleGetConversation)
 		}
 	}
 	{

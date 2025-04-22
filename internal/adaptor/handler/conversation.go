@@ -134,3 +134,35 @@ func (c *conversationHandler) HandleCreateConversation(ctx *fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(resp)
 }
+
+// GetConversations godoc
+//
+//	@summary		Get Conversation by id
+//	@description	Get Conversation by id
+//	@tags			conversation
+//	@Security		Bearer
+//	@produce		json
+//	@Param			limit	query	int		false	"Number of history to be retrieved"
+//	@Param			page	query	int		false	"Page to retrieved"
+//	@Param			id		path	string	true	"conversation id"
+//	@response		200	{object}	dto.SuccessResponse[dto.ConversationResponse]	"OK"
+//	@response		400	{object}	dto.ErrorResponse	"Bad Request"
+//	@response		401	{object}	dto.ErrorResponse	"Unauthorized"
+//	@response		500	{object}	dto.ErrorResponse	"Internal Server Error"
+//	@Router /conversations/{id} [get]
+func (c *conversationHandler) HandleGetConversation(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+
+	conversation, err := c.convUC.GetConversation(id)
+	if err != nil {
+		return err
+	}
+
+	respData, err := c.dto.ToResponse(conversation)
+	if err != nil {
+		return apperror.InternalServerError(err, "failed to create response data")
+	}
+	resp := dto.Success(*respData)
+
+	return ctx.JSON(resp)
+}

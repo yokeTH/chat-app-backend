@@ -94,3 +94,31 @@ func (r *conversationRepository) GetMembers(id string) (*[]domain.User, error) {
 	}
 	return &conversation.Members, nil
 }
+
+func (r *conversationRepository) GetConversation(id string) (*domain.Conversation, error) {
+	var conversation domain.Conversation
+
+	if err := r.db.
+		Where("id = ?", id).
+		Preload("Members").
+		Find(&conversation).
+		Error; err != nil {
+		return nil, apperror.InternalServerError(err, "fail to retrieve conversation")
+	}
+
+	var lastMessage []domain.Message
+	if err := r.db.
+		Where("conversation_id = ?", conversation.ID).
+		Order("created_at DESC").
+		// Limit(10).
+		Preload("Sender").
+		Find(&lastMessage).Error; err != nil {
+		return nil, apperror.InternalServerError(err, "fail to retrieve last message")
+	}
+	sort.Slice(lastMessage, func(i, j int) bool {
+		return lastMessage[i].CreatedAt.Before(lastMessage[j].CreatedAt)
+	})
+	conversation.Messages = lastMessage
+
+	return &conversation, nil
+}
