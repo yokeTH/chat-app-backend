@@ -29,6 +29,7 @@ type ChatMessage struct {
 	SenderID       string       `json:"senderId"`
 	Timestamp      int64        `json:"created_at"`
 	Attachments    []Attachment `json:"attachments,omitempty"`
+	MessageType    string       `json:"type"`
 }
 
 type Attachment struct {

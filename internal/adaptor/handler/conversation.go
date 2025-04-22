@@ -2,23 +2,30 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/websocket"
 	"github.com/yokeTH/chat-app-backend/internal/domain"
 	"github.com/yokeTH/chat-app-backend/internal/usecase/conversation"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/message"
 	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type conversationHandler struct {
-	convUC conversation.ConversationUseCase
-	dto    dto.ConversationDto
+	convUC  conversation.ConversationUseCase
+	msgUC   message.MessageUseCase
+	dto     dto.ConversationDto
+	mServer websocket.MessageServer
 }
 
-func NewConversationHandler(convUC conversation.ConversationUseCase, dto dto.ConversationDto) *conversationHandler {
+func NewConversationHandler(convUC conversation.ConversationUseCase, dto dto.ConversationDto, mServer websocket.MessageServer, msgUC message.MessageUseCase) *conversationHandler {
 	return &conversationHandler{
-		convUC: convUC,
-		dto:    dto,
+		convUC:  convUC,
+		msgUC:   msgUC,
+		dto:     dto,
+		mServer: mServer,
 	}
 }
 
@@ -90,6 +97,12 @@ func (c *conversationHandler) HandleCreateConversation(ctx *fiber.Ctx) error {
 		return apperror.InternalServerError(err, "failed to create response data")
 	}
 	resp := dto.Success(respData)
+
+	system, err := c.msgUC.CreateSystemMessage(conversation.ID, "chat has been created")
+	if err != nil {
+		return err
+	}
+	fmt.Println(system)
 
 	return ctx.Status(201).JSON(resp)
 }
