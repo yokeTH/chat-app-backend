@@ -23,3 +23,7 @@ func (c *conversationUseCase) CreateConversation(usersID []string, createdByID s
 func (c *conversationUseCase) GetMembers(id string) (*[]domain.User, error) {
 	return c.convRepo.GetMembers(id)
 }
+
+func (c *conversationUseCase) GetConversation(id string) (*domain.Conversation, error) {
+	return c.convRepo.GetConversation(id)
+}

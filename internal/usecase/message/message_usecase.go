@@ -21,6 +21,26 @@ func (uc *messageUseCase) Create(senderID string, req dto.CreateMessageRequest) 
 		ConversationID: req.ConversationID,
 		SenderID:       senderID,
 		Content:        req.Content,
+		MessageType:    domain.MessageTypeText,
+	}
+
+	if err := uc.repo.Create(message); err != nil {
+		return nil, apperror.InternalServerError(err, "failed to create message")
+	}
+
+	message, err := uc.repo.FindByID(message.ID)
+	if err != nil {
+		return nil, apperror.InternalServerError(err, "failed to get message")
+	}
+
+	return message, nil
+}
+
+func (uc *messageUseCase) CreateSystemMessage(conversationID string, content string) (*domain.Message, error) {
+	message := &domain.Message{
+		ConversationID: conversationID,
+		Content:        content,
+		MessageType:    domain.MessageTypeSystem,
 	}
 
 	if err := uc.repo.Create(message); err != nil {

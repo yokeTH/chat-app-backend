@@ -17,6 +17,7 @@ type MessageRepository interface {
 
 type MessageUseCase interface {
 	Create(senderID string, req dto.CreateMessageRequest) (*domain.Message, error)
+	CreateSystemMessage(conversationID string, content string) (*domain.Message, error)
 	GetByID(id string) (*domain.Message, error)
 	GetByConversationID(convoID string) (*[]domain.Message, error)
 	GetByConversationPaginated(convoID string, limit, page int) (*[]domain.Message, int, int, error)

@@ -40,6 +40,7 @@ func (m *messageDto) ToResponse(e *domain.Message) (*MessageResponse, error) {
 		ConversationID: e.ConversationID,
 		Attachments:    *attachments,
 		Reactions:      *m.reactionDto.ToResponseList(e.Reactions),
+		MessageType:    string(e.MessageType),
 	}, nil
 }
 
@@ -62,6 +63,7 @@ type MessageResponse struct {
 	UpdatedAt      time.Time    `json:"updated_at"`
 	Sender         UserResponse `json:"sender"`
 	ConversationID string       `json:"conversation_id"`
+	MessageType    string       `json:"type"`
 	// Sender      UserResponse       `json:"senderId,omitempty"`
 	Attachments []FileResponse     `json:"attachments"`
 	Reactions   []ReactionResponse `json:"reactions"`

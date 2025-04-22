@@ -78,7 +78,7 @@ func main() {
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
 	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
-	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto)
+	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto, msgServer, msgUC, messageDto)
 	userHandler := handler.NewUserHandler(userUC, userDto, msgServer)
 
 	// Setup middleware
@@ -138,6 +138,7 @@ func main() {
 			conversation.Get("/", conversationHandler.HandleListConversation)
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
 			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
+			conversation.Get("/:id", conversationHandler.HandleGetConversation)
 		}
 	}
 	{
