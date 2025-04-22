@@ -78,7 +78,7 @@ func main() {
 	bookHandler := handler.NewBookHandler(bookUC)
 	fileHandler := handler.NewFileHandler(fileUC, fileDto)
 	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
-	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto, msgServer, msgUC)
+	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto, msgServer, msgUC, messageDto)
 	userHandler := handler.NewUserHandler(userUC, userDto, msgServer)
 
 	// Setup middleware

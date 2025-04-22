@@ -49,14 +49,22 @@ func (s *messageServer) handleEventTypeMessage(payload json.RawMessage) error {
 		return err
 	}
 
-	members, err := s.conversationUC.GetMembers(chatMsg.ConversationID)
+	if err := s.BroadcastToMembersInConversation(chatMsg.ConversationID, createdMessageJson); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *messageServer) BroadcastToMembersInConversation(conversationID string, msg []byte) error {
+	members, err := s.conversationUC.GetMembers(conversationID)
 	if err != nil {
 		log.Printf("failed to get conversation members : %v", err)
 		return err
 	}
 
 	for _, member := range *members {
-		s.sendMessageToUserID(member.ID, createdMessageJson)
+		s.sendMessageToUserID(member.ID, msg)
 	}
 	return nil
 }
