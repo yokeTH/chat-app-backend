@@ -37,9 +37,9 @@ func (m *messageDto) ToResponse(e *domain.Message) (*MessageResponse, error) {
 	if len(*attachments) > 0 {
 		a := (*attachments)[0]
 		if strings.HasPrefix(a.MimeType, "image") {
-			content = fmt.Sprintf("[Image:image|%s", a.Url)
+			content = fmt.Sprintf("[Image:image|%s]", a.Url)
 		} else {
-			content = fmt.Sprintf("[File:filename|%s", a.Url)
+			content = fmt.Sprintf("[File:filename|%s]", a.Url)
 		}
 	} else {
 		content = e.Content
