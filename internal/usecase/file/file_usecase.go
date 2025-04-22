@@ -31,7 +31,7 @@ func (u *fileUseCase) GetByID(id int) (*domain.File, error) {
 	return u.fileRepo.GetByID(id)
 }
 
-func (u *fileUseCase) CreateFile(ctx context.Context, file *multipart.FileHeader) (*domain.File, error) {
+func (u *fileUseCase) CreateFile(ctx context.Context, file *multipart.FileHeader, messageID string) (*domain.File, error) {
 	fileData, err := file.Open()
 	if err != nil {
 		return nil, apperror.InternalServerError(err, "error opening file")
@@ -40,10 +40,12 @@ func (u *fileUseCase) CreateFile(ctx context.Context, file *multipart.FileHeader
 
 	filename := strings.ReplaceAll(file.Filename, " ", "-")
 	contentType := file.Header.Get("Content-Type")
-	fileKey := fmt.Sprintf("upload/%s", filename)
+	fileKey := fmt.Sprintf("upload/%s-%s", filename, messageID)
 
 	fileInfo := &domain.File{
-		Key: fileKey,
+		Key:       fileKey,
+		MessageID: messageID,
+		MimeType:  contentType,
 	}
 
 	if err = u.pubStorage.UploadFile(ctx, fileKey, contentType, fileData); err != nil {

@@ -107,7 +107,6 @@ func (s *storage) GetSignedUrl(ctx context.Context, key string, expires time.Dur
 }
 
 func (s *storage) GetPublicUrl(key string) (string, error) {
-	fmt.Println(s.config.UrlPathStyle)
 	if s.config.UrlPathStyle {
 		return url.JoinPath(s.config.Endpoint, s.config.BucketName, key)
 	}

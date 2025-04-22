@@ -39,6 +39,7 @@ func (r *conversationRepository) GetUserConversations(userID string, limit, page
 			Order("created_at DESC").
 			// Limit(10).
 			Preload("Sender").
+			Preload("Attachments").
 			Find(&lastMessage).Error; err != nil {
 			return nil, 0, 0, apperror.InternalServerError(err, "fail to retrieve last message")
 		}
@@ -69,7 +70,6 @@ func (r *conversationRepository) CreateConversation(usersID []string, createdByI
 	if err := r.db.Where("id IN ?", usersID).Find(&users).Error; err != nil {
 		return nil, err
 	}
-	fmt.Println("FIND ID IN:", users)
 	if len(users) != len(usersID) {
 		return nil, apperror.BadRequestError(fmt.Errorf("some user IDs are invalid in create conversation repository"), "some user IDs are invalid")
 	}
@@ -112,6 +112,7 @@ func (r *conversationRepository) GetConversation(id string) (*domain.Conversatio
 		Order("created_at DESC").
 		// Limit(10).
 		Preload("Sender").
+		Preload("Attachments").
 		Find(&lastMessage).Error; err != nil {
 		return nil, apperror.InternalServerError(err, "fail to retrieve last message")
 	}

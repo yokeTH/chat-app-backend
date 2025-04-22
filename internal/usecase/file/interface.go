@@ -14,7 +14,7 @@ type FileRepository interface {
 }
 
 type FileUseCase interface {
-	CreateFile(ctx context.Context, file *multipart.FileHeader) (*domain.File, error)
+	CreateFile(ctx context.Context, file *multipart.FileHeader, messageID string) (*domain.File, error)
 	List(limit, page int) ([]domain.File, int, int, error)
 	GetByID(id int) (*domain.File, error)
 }
