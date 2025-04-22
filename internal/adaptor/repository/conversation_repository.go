@@ -23,8 +23,44 @@ func (r *conversationRepository) GetUserConversations(userID string, limit, page
 	var total, last int
 
 	if err := r.db.
+		Table("conversations").
+		Select("DISTINCT conversations.*").
 		Joins("JOIN conversation_members ON conversation_members.conversation_id = conversations.id").
-		Where("conversation_members.user_id = ?", userID).
+		Where("(conversations.is_group = ? OR (conversations.is_group = ? AND conversation_members.user_id = ?))", true, false, userID).
+		Scopes(db.Paginate(&domain.Conversation{}, &limit, &page, &total, &last)).
+		Preload("Members").
+		Find(&conversations).
+		Error; err != nil {
+		return nil, 0, 0, apperror.InternalServerError(err, "fail to retrieve conversation")
+	}
+
+	for i := range conversations {
+		var lastMessage []domain.Message
+		if err := r.db.
+			Where("conversation_id = ?", conversations[i].ID).
+			Order("created_at DESC").
+			// Limit(10).
+			Preload("Sender").
+			Preload("Attachments").
+			Find(&lastMessage).Error; err != nil {
+			return nil, 0, 0, apperror.InternalServerError(err, "fail to retrieve last message")
+		}
+		sort.Slice(lastMessage, func(i, j int) bool {
+			return lastMessage[i].CreatedAt.Before(lastMessage[j].CreatedAt)
+		})
+		conversations[i].Messages = lastMessage
+	}
+
+	return &conversations, last, total, nil
+}
+
+func (r *conversationRepository) GetUserNotInConversations(userID string, limit, page int) (*[]domain.Conversation, int, int, error) {
+	var conversations []domain.Conversation
+	var total, last int
+
+	if err := r.db.
+		Joins("JOIN conversation_members ON conversation_members.conversation_id = conversations.id").
+		Where("conversation_members.user_id != ?", userID).
 		Scopes(db.Paginate(&domain.Conversation{}, &limit, &page, &total, &last)).
 		Preload("Members").
 		Find(&conversations).

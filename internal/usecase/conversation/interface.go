@@ -7,6 +7,7 @@ type ConversationRepository interface {
 	CreateConversation(usersID []string, createdByID string, name string) (*domain.Conversation, error)
 	GetMembers(id string) (*[]domain.User, error)
 	GetConversation(id string) (*domain.Conversation, error)
+	GetUserNotInConversations(userID string, limit, page int) (*[]domain.Conversation, int, int, error)
 }
 
 type ConversationUseCase interface {
