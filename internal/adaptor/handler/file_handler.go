@@ -1,21 +1,35 @@
 package handler
 
 import (
+	"errors"
+	"log"
+	"time"
+
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yokeTH/chat-app-backend/internal/adaptor/dto"
+	"github.com/yokeTH/chat-app-backend/internal/adaptor/websocket"
+	"github.com/yokeTH/chat-app-backend/internal/domain"
 	"github.com/yokeTH/chat-app-backend/internal/usecase/file"
+	"github.com/yokeTH/chat-app-backend/internal/usecase/message"
 	"github.com/yokeTH/chat-app-backend/pkg/apperror"
 )
 
 type fileHandler struct {
+	msgUC       message.MessageUseCase
 	fileUseCase file.FileUseCase
 	dto         dto.FileDto
+	msgDto      dto.MessageDto
+	mServer     websocket.MessageServer
 }
 
-func NewFileHandler(uc file.FileUseCase, dto dto.FileDto) *fileHandler {
+func NewFileHandler(uc file.FileUseCase, dto dto.FileDto, msgUC message.MessageUseCase, msgDto dto.MessageDto, mServer websocket.MessageServer) *fileHandler {
 	return &fileHandler{
 		fileUseCase: uc,
 		dto:         dto,
+		msgUC:       msgUC,
+		msgDto:      msgDto,
+		mServer:     mServer,
 	}
 }
 
@@ -24,26 +38,76 @@ func NewFileHandler(uc file.FileUseCase, dto dto.FileDto) *fileHandler {
 //	@summary		CreatePublicFile
 //	@description	create public file by upload file multipart-form field name file
 //	@tags			file
-//	@accept			x-www-form-urlencoded
+//	@accept			multipart/form-data
 //	@produce 		json
 //	@param			file	formData 	file	true "file data"
+//	@param			id		path		string 	true "file data"
 //	@success 		201	{object}	dto.SuccessResponse[dto.FileResponse]	"Created"
 //	@failure		400	{object}	dto.ErrorResponse	"Bad Request"
 //	@failure 		500	{object}	dto.ErrorResponse	"Internal Server Error"
-//	@Router /files [post]
+//	@Router /conversations/{id}/files [post]
 func (h *fileHandler) CreateFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return apperror.BadRequestError(err, "invalid file")
 	}
 
-	fileData, err := h.fileUseCase.CreateFile(c.Context(), file)
+	conversationID := c.Params("id")
+	if conversationID == "" {
+		return apperror.BadRequestError(err, "required conversationID")
+	}
+
+	user, ok := c.Locals("user").(*domain.User)
+	if !ok {
+		return apperror.InternalServerError(errors.New("failed to retrieve user from context"), "unable to retrieve user from context")
+	}
+
+	message, err := h.msgUC.Create(user.ID, dto.CreateMessageRequest{
+		ConversationID: conversationID,
+		Content:        "",
+	})
+	if err != nil {
+		return err
+	}
+
+	fileData, err := h.fileUseCase.CreateFile(c.Context(), file, message.ID)
 	if err != nil {
 		return err
 	}
 
 	response, err := h.dto.ToResponse(*fileData)
 	if err != nil {
+		return err
+	}
+
+	message, err = h.msgUC.GetByID(message.ID)
+	if err != nil {
+		return err
+	}
+
+	createdMessageResponse, err := h.msgDto.ToResponse(message)
+	if err != nil {
+		log.Printf("failed to transform to dto: %v", err)
+		return err
+	}
+
+	payloadResponse, err := json.Marshal(createdMessageResponse)
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return err
+	}
+
+	createdMessageJson, err := json.Marshal(websocket.WebSocketMessage{
+		Event:     websocket.EventTypeMessage,
+		Payload:   payloadResponse,
+		CreatedAt: time.Now().UnixMilli(),
+	})
+	if err != nil {
+		log.Printf("failed to encode json: %v", err)
+		return err
+	}
+
+	if err := h.mServer.BroadcastToMembersInConversation(conversationID, createdMessageJson); err != nil {
 		return err
 	}
 

@@ -79,6 +79,7 @@ func (r *messageRepository) FindByConversationIDPaginated(convoID string, limit,
 		Order("created_at ASC").
 		Preload("Sender").
 		Preload("Attachments").
+		Preload("Attachments").
 		Preload("Reactions").
 		Scopes(db.Paginate(&domain.Message{}, &limit, &page, &total, &last))
 

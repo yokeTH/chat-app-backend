@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/yokeTH/chat-app-backend/internal/domain"
@@ -31,9 +33,21 @@ func (m *messageDto) ToResponse(e *domain.Message) (*MessageResponse, error) {
 		return nil, err
 	}
 
+	var content string
+	if len(*attachments) > 0 {
+		a := (*attachments)[0]
+		if strings.HasPrefix(a.MimeType, "image") {
+			content = fmt.Sprintf("[Image:image|%s", a.Url)
+		} else {
+			content = fmt.Sprintf("[File:filename|%s", a.Url)
+		}
+	} else {
+		content = e.Content
+	}
+
 	return &MessageResponse{
 		ID:             e.ID,
-		Content:        e.Content,
+		Content:        content,
 		CreatedAt:      e.CreatedAt,
 		UpdatedAt:      e.UpdatedAt,
 		Sender:         *m.userDto.ToResponse(&e.Sender),

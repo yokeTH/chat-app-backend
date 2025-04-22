@@ -76,7 +76,7 @@ func main() {
 	// Setup handlers
 	authHandler := handler.NewAuthHandler(userUC)
 	bookHandler := handler.NewBookHandler(bookUC)
-	fileHandler := handler.NewFileHandler(fileUC, fileDto)
+	fileHandler := handler.NewFileHandler(fileUC, fileDto, msgUC, messageDto, msgServer)
 	msgHandler := handler.NewMessageHandler(msgUC, messageDto)
 	conversationHandler := handler.NewConversationHandler(conversationUC, conversationDto, msgServer, msgUC, messageDto)
 	userHandler := handler.NewUserHandler(userUC, userDto, msgServer)
@@ -118,14 +118,6 @@ func main() {
 		}
 	}
 	{
-		file := s.Group("/files")
-		{
-			file.Get("/", fileHandler.List)
-			file.Get("/:id", fileHandler.GetInfo)
-			file.Post("/", fileHandler.CreateFile)
-		}
-	}
-	{
 		message := s.Group("/messages", authMiddleware.Auth)
 		{
 			message.Post("/", msgHandler.HandleCreateMessage)
@@ -139,6 +131,7 @@ func main() {
 			conversation.Post("/", conversationHandler.HandleCreateConversation)
 			conversation.Get("/:conversationID/messages", msgHandler.HandleListMessagesByConversation)
 			conversation.Get("/:id", conversationHandler.HandleGetConversation)
+			conversation.Post("/:id/files", fileHandler.CreateFile)
 		}
 	}
 	{
