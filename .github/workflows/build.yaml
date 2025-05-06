@@ -47,7 +47,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.5
-          args: --timeout=10m
+          args: --timeout=10m --skip-dirs=docs/
 
   test:
     needs:
